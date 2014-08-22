@@ -11,7 +11,7 @@ if __name__ == "__main__":
  print rpc.getstatus()
  print rpc.walletopen("delegate")
  rpc.disableblockproduction("ALL")
- print rpc.unlock()
+ print rpc.unlock(config.unlock)
  r = json.loads(rpc.walletgetaccounts())
  accounts = r["result"]
  for account in accounts :

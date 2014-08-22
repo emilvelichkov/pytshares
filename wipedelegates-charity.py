@@ -10,7 +10,7 @@ if __name__ == "__main__":
  print getstatus()
  print walletopen("delegate")
  disableblockproduction("ALL")
- print unlock()
+ print unlock(config.unlock)
  r = json.loads(walletgetaccounts())
  accounts = r["result"]
  for account in accounts :

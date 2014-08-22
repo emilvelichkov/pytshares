@@ -19,7 +19,7 @@ def checkmissedblocks() :
   if misschange >= 3 :
    print rpc.getstatus()
    print rpc.walletopen("delegate")
-   print rpc.unlockunsecure(config.unlock)
+   print rpc.unlock(config.unlock)
    print rpc.setnetwork(120,200)
    rpc.enableblockproduction("ALL")
    print "enabling backup block production"

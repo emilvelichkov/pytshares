@@ -51,19 +51,7 @@ class btsrpcapi :
          "id": 0
      })
 
- def unlock(self) :
-     key = getpass.getpass()
-     re = self.rpcexec({
-         "method": "wallet_unlock",
-         "params": ["99999999999", key],
-         "jsonrpc": "2.0",
-         "id": 0
-     })
-     if "error" in re :
-      print "\n\tLogin credidentials invalid!\n"
-      raise
-
- def unlockunsecure(self,key) :
+ def unlock(self,key) :
      return self.rpcexec({
          "method": "wallet_unlock",
          "params": ["99999999999", key],
