@@ -1,0 +1,175 @@
+#!/usr/bin/python
+
+import sys, getopt 
+import requests
+import json
+from pprint import pprint
+import time
+import getpass
+
+class btsrpcapi :
+ def __init__(self, url, user, pwd) :
+     self.auth    = (user,pwd)
+     self.url     = url
+     self.headers = {'content-type': 'application/json'}
+
+   
+ def rpcexec(self,payload) :
+     response = requests.post(self.url, data=json.dumps(payload), headers=self.headers, auth=self.auth)
+     r = json.loads(response.text)
+     return json.dumps(r,indent=4) #["result"]
+     
+ def getstatus(self) :
+     return self.rpcexec({
+        "method": "get_info",
+        "params": [],
+        "jsonrpc": "2.0",
+        "id": 0
+     })
+
+ def getaccount(self,name) :
+     return self.rpcexec({
+        "method": "blockchain_get_account",
+        "params": [name],
+        "jsonrpc": "2.0",
+        "id": 0
+     })
+
+ def walletcreate(self,name,pwd) :
+     return self.rpcexec({
+         "method": "wallet_create",
+         "params": [name,pwd],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+     
+ def walletopen(self,name) :
+     return self.rpcexec({
+         "method": "wallet_open",
+         "params": [name],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
+ def unlock(self) :
+     key = getpass.getpass()
+     re = self.rpcexec({
+         "method": "wallet_unlock",
+         "params": ["99999999999", key],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+     if "error" in re :
+      print "\n\tLogin credidentials invalid!\n"
+      raise
+
+ def unlockunsecure(self,key) :
+     return self.rpcexec({
+         "method": "wallet_unlock",
+         "params": ["99999999999", key],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
+ def lock(self) :
+     return self.rpcexec({
+         "method": "wallet_lock",
+         "params": [],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
+ def importkey(self,key,name) :
+     return self.rpcexec({
+         "method": "wallet_import_private_key",
+         "params": [key, name, "true", "false"],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
+
+ def importkeyonly(self,key) :
+     return self.rpcexec({
+         "method": "wallet_import_private_key",
+         "params": [key],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
+ def createaccount(self,name) :
+     return self.rpcexec({
+         "method": "wallet_account_create",
+         "params": [name],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
+ def registername(self,name,payee,data,payrate) :
+     return self.rpcexec({
+         "method": "wallet_account_register",
+         "params": [name, payee, data, payrate],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
+ def enableblockproduction(self,name) :
+     return self.rpcexec({
+         "method": "wallet_delegate_set_block_production",
+         "params": [name, "true"],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
+ def disableblockproduction(self,name) :
+     return self.rpcexec({
+         "method": "wallet_delegate_set_block_production",
+         "params": [name, "false"],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
+ def approvedelegate(self,name) :
+     return self.rpcexec({
+         "method": "wallet_approve_delegate",
+         "params": [name, "true"],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
+ def walletgetaccounts(self) :
+     return self.rpcexec({
+         "method": "wallet_list_my_accounts",
+         "params": [],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
+ def walletdumpprivkey(self,key) :
+     r = self.rpcexec({
+         "method": "wallet_dump_private_key",
+         "params": [key],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+     return json.loads(r)["result"]
+
+ def setnetwork(self,d,m) :
+     return self.rpcexec({
+         "method": "network_set_advanced_node_parameters",
+         "params": [{"desired_number_of_connections":d,
+                     "maximum_number_of_connections":m}],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
+ def withdrawdelegatepay(self,delegate,target,amount) :
+     return self.rpcexec({
+         "method": "wallet_delegate_withdraw_pay",
+         "params": [delegate, target, amount, "auto pay day"],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
+ if __name__ == "__main__":
+         print getstatus()
+
