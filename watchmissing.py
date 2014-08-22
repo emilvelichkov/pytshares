@@ -5,6 +5,7 @@ from btsrpcapi import *
 import config
 
 rpc       = btsrpcapi(config.url, config.user, config.passwd)
+rpcMain   = btsrpcapi(config.mainurl, config.mainuser, config.mainpasswd)
 rpcBackup = btsrpcapi(config.backupurl, config.backupuser, config.backuppasswd)
 
 def checkmissedblocks() :
@@ -17,19 +18,17 @@ def checkmissedblocks() :
    a         = json.loads(rpc.getaccount(name))
    newmissed = int(a["result"]["delegate_info"]["blocks_missed"])
    misschange += newmissed - oldmissed
-  if misschange >= 3 :
-   print "enabling backup block production"
-   print rpcBackup.getstatus()
-   print rpcBackup.walletopen("delegate")
-   rpcBackup.enableblockproduction("ALL")
-   print rpcBackup.setnetwork(120,200)
-   print rpcBackup.unlock(config.backupunlock)
+  if 1 : #misschange >= 3 :
+    print "disabling main block production"
+    print "open" + rpcMain.walletopen("delegate")
+    print "disable" + rpcMain.disableblockproduction("ALL")
+    print "lock" + rpcMain.lock()
 
-   print "disabling main block production"
-   print rpc.getstatus()
-   print rpc.walletopen("delegate")
-   print rpc.lock( )
-   rpc.disableblockproduction("ALL")
+    print "enabling backup block production"
+    print "open" + rpcBackup.walletopen("delegate")
+    print "enable" + rpcBackup.enableblockproduction("ALL")
+    print "unclock" + rpcBackup.unlock(config.backupunlock)
+    print "network" + rpcBackup.setnetwork(120,200)
  updatemissedblocks()
 
 def updatemissedblocks() :

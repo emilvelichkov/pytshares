@@ -4,8 +4,8 @@ import os
 from btsrpcapi import *
 import config
 
-rpc  = btsrpcapi(config.url, config.user, config.passwd)
-rpc2 = btsrpcapi(config.backupurl, config.backupuser, config.backuppasswd)
+rpc2  = btsrpcapi(config.backupurl, config.backupuser, config.backuppasswd)
+rpc  = btsrpcapi(config.mainurl, config.mainuser, config.mainpasswd)
 
 def enable( ) :
     print "enabling backup block production"
@@ -17,6 +17,7 @@ def enable( ) :
 
     print "disabling main block production"
     print rpc.getstatus()
+    print rpc.walletopen("delegate")
     print rpc.lock()
     rpc.disableblockproduction("ALL")
 
