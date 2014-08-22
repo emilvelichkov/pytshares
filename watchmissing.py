@@ -18,7 +18,7 @@ def checkmissedblocks() :
    a         = json.loads(rpc.getaccount(name))
    newmissed = int(a["result"]["delegate_info"]["blocks_missed"])
    misschange += newmissed - oldmissed
-  if 1 : #misschange >= 3 :
+  if misschange >= 2 :
     print "disabling main block production"
     print "open" + rpcMain.walletopen("delegate")
     print "disable" + rpcMain.disableblockproduction("ALL")
