@@ -4,11 +4,12 @@ import os
 from btsrpcapi import *
 import config
 
-rpc = btsrpcapi(config.url, config.user, config.passwd)
+rpc       = btsrpcapi(config.url, config.user, config.passwd)
+rpcBackup = btsrpcapi(config.backupurl, config.backupuser, config.backuppasswd)
 
 def checkmissedblocks() :
  misschange = 0
- with open('/home/coin/pytshares/missedblocks.csv', 'rb') as csvfile:
+ with open(os.getenv("HOME") + '/pytshares/missedblocks.csv', 'rb') as csvfile:
   spamreader = csv.reader(csvfile, delimiter=':')
   for row in spamreader:
    name      = row[0]
@@ -17,18 +18,24 @@ def checkmissedblocks() :
    newmissed = int(a["result"]["delegate_info"]["blocks_missed"])
    misschange += newmissed - oldmissed
   if misschange >= 3 :
+   print "enabling backup block production"
+   print rpcBackup.getstatus()
+   print rpcBackup.walletopen("delegate")
+   rpcBackup.enableblockproduction("ALL")
+   print rpcBackup.setnetwork(120,200)
+   print rpcBackup.unlock(config.backupunlock)
+
+   print "disabling main block production"
    print rpc.getstatus()
    print rpc.walletopen("delegate")
-   print rpc.unlock(config.unlock)
-   print rpc.setnetwork(120,200)
-   rpc.enableblockproduction("ALL")
-   print "enabling backup block production"
+   print rpc.lock( )
+   rpc.disableblockproduction("ALL")
  updatemissedblocks()
 
 def updatemissedblocks() :
- f = open('/home/coin/pytshares/missedblocksnew.csv', 'wb')
+ f = open(os.getenv("HOME") + '/pytshares/missedblocksnew.csv', 'wb')
  w = csv.writer(f, delimiter=':')
- with open('/home/coin/pytshares/missedblocks.csv', 'rb') as csvfile:
+ with open(os.getenv("HOME") + '/pytshares/missedblocks.csv', 'rb') as csvfile:
   spamreader = csv.reader(csvfile, delimiter=':')
   for row in spamreader:
    name      = row[0]
@@ -36,7 +43,7 @@ def updatemissedblocks() :
    newmissed = int(a["result"]["delegate_info"]["blocks_missed"])
    w.writerow([name, newmissed])
  f.close()
- os.rename('/home/coin/pytshares/missedblocksnew.csv', '/home/coin/pytshares/missedblocks.csv')
+ os.rename(os.getenv("HOME") + '/pytshares/missedblocksnew.csv', os.getenv("HOME") + '/pytshares/missedblocks.csv')
 
 if __name__ == "__main__":
  checkmissedblocks()
