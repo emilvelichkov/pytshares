@@ -4,9 +4,8 @@ import os
 from btsrpcapi import *
 import config
 
-rpc       = btsrpcapi(config.url, config.user, config.passwd)
-rpcMain   = btsrpcapi(config.mainurl, config.mainuser, config.mainpasswd)
-rpcBackup = btsrpcapi(config.backupurl, config.backupuser, config.backuppasswd)
+rpcLOCAL  = btsrpcapi(config.url, config.user, config.passwd)
+rpcREMOTE = btsrpcapi(config.backupurl, config.backupuser, config.backuppasswd)
 
 def checkmissedblocks() :
  misschange = 0
@@ -15,20 +14,20 @@ def checkmissedblocks() :
   for row in spamreader:
    name      = row[0]
    oldmissed = int(row[1])
-   a         = json.loads(rpc.getaccount(name))
+   a         = json.loads(rpcLOCAL.getaccount(name))
    newmissed = int(a["result"]["delegate_info"]["blocks_missed"])
    misschange += newmissed - oldmissed
   if misschange >= 2 :
     print "disabling main block production"
-    print "open" + rpcMain.walletopen("delegate")
-    print "disable" + rpcMain.disableblockproduction("ALL")
-    print "lock" + rpcMain.lock()
+    print "open"    + rpcREMOTE.walletopen("delegate")
+    print "disable" + rpcREMOTE.disableblockproduction("ALL")
+    print "lock"    + rpcREMOTE.lock()
 
     print "enabling backup block production"
-    print "open" + rpcBackup.walletopen("delegate")
-    print "enable" + rpcBackup.enableblockproduction("ALL")
-    print "unclock" + rpcBackup.unlock(config.backupunlock)
-    print "network" + rpcBackup.setnetwork(120,200)
+    print "open"    + rpcLOCAL.walletopen("delegate")
+    print "enable"  + rpcLOCAL.enableblockproduction("ALL")
+    print "unclock" + rpcLOCAL.unlock(config.backupunlock)
+    print "network" + rpcLOCAL.setnetwork(120,200)
  updatemissedblocks()
 
 def updatemissedblocks() :
@@ -38,7 +37,7 @@ def updatemissedblocks() :
   spamreader = csv.reader(csvfile, delimiter=':')
   for row in spamreader:
    name      = row[0]
-   a         = json.loads(rpc.getaccount(name))
+   a         = json.loads(rpcLOCAL.getaccount(name))
    newmissed = int(a["result"]["delegate_info"]["blocks_missed"])
    w.writerow([name, newmissed])
  f.close()
