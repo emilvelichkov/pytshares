@@ -3,11 +3,11 @@ from btsrpcapi import *
 import config
 import re
 
-payouttarget = "xeroc"
+payouttarget = "delegate.xeroc"
+withdrawfee = 0.5 * 1e5;
 
 if __name__ == "__main__":
  rpc = btsrpcapi(config.url, config.user, config.passwd)
- withdrawfee = 0.1 * 1e5;
  print rpc.getstatus()
  print rpc.walletopen("delegate")
  rpc.disableblockproduction("ALL")

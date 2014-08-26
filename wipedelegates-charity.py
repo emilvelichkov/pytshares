@@ -4,9 +4,9 @@ import config
 import re
 
 payouttarget = "payouts.charity"
+withdrawfee = 0.5 * 1e5;
 
 if __name__ == "__main__":
- withdrawfee = 0.1 * 1e5;
  print getstatus()
  print walletopen("delegate")
  disableblockproduction("ALL")
