@@ -27,6 +27,14 @@ class btsrpcapi :
         "id": 0
      })
 
+ def getbalance(self,name) :
+     return self.rpcexec({
+        "method": "wallet_account_balance",
+        "params": [name],
+        "jsonrpc": "2.0",
+        "id": 0
+     })
+
  def getaccount(self,name) :
      return self.rpcexec({
         "method": "blockchain_get_account",
@@ -154,6 +162,42 @@ class btsrpcapi :
      return self.rpcexec({
          "method": "wallet_delegate_withdraw_pay",
          "params": [delegate, target, amount, "auto pay day"],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+ def orderhistory(self,a,b,l) :
+     return self.rpcexec({
+         "method": "blockchain_market_order_history",
+         "params": [a,b,1,l],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+ def orderbook(self,a,b,l) :
+     return self.rpcexec({
+         "method": "blockchain_market_order_book",
+         "params": [a,b,l],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+ def marketbid(self,fromaccount,quant,qantsymbol,price,basesymol) :
+     return self.rpcexec({
+         "method": "wallet_market_submit_bid",
+         "params": [fromaccount,quant,qantsymbol,price,basesymol],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+ def marketask(self,fromaccount,quant,qantsymbol,price,basesymol) :
+     return self.rpcexec({
+         "method": "wallet_market_submit_ask",
+         "params": [fromaccount,quant,qantsymbol,price,basesymol],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
+ def marketstatus(self,a,b) :
+     return self.rpcexec({
+         "method": "blockchain_market_status",
+         "params": [a,b],
          "jsonrpc": "2.0",
          "id": 0
      })
