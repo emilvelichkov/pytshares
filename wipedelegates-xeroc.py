@@ -20,5 +20,5 @@ if __name__ == "__main__":
     if account["delegate_info"]["pay_balance"] > withdrawfee:
      payout = float(account["delegate_info"]["pay_balance"]) - withdrawfee
      print "%20s -- %20.5f -- %20.5f" % (account["name"], account["delegate_info"]["pay_balance"]/1.0e5, payout/1.0e5)
-     #print rpc.withdrawdelegatepay(account["name"],payouttarget,payout/1.0e5) 
+     print rpc.withdrawdelegatepay(account["name"],payouttarget,payout/1.0e5) 
  print rpc.lock()

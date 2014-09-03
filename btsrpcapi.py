@@ -202,6 +202,14 @@ class btsrpcapi :
          "id": 0
      })
 
+ def updatereg(self,name,payee,data,payrate) :
+     return self.rpcexec({
+         "method": "wallet_account_update_registration",
+         "params": [name, payee, data, payrate],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
  if __name__ == "__main__":
          print getstatus()
 
