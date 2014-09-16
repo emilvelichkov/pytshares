@@ -1,3 +1,5 @@
-config.py
+papersharedrop/qr
+papersharedrop/addresses
+config.*
 *.pyc
 *.csv
