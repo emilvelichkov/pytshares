@@ -13,7 +13,7 @@ def enable( ) :
     print rpc2.walletopen("delegate")
     rpc2.enableblockproduction("ALL")
     print rpc2.unlock(config.backupunlock)
-    print rpc2.setnetwork(120,200)
+    print rpc2.setnetwork(25,30)
 
     print "disabling main block production"
     print rpc.getstatus()

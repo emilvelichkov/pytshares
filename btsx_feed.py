@@ -11,6 +11,8 @@ from pprint import pprint
 headers = {'content-type': 'application/json',
    'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
 
+payaccount = "delegate.xeroc"
+
 ## -----------------------------------------------------------------------
 ## Load Config
 ## -----------------------------------------------------------------------
@@ -23,10 +25,14 @@ config_data.close()
 ## -----------------------------------------------------------------------
 auth = (config["bts_rpc"]["username"], config["bts_rpc"]["password"])
 url  = config["bts_rpc"]["url"]
-asset_list_publish = sys.argv
-asset_list_publish.pop(0)
 asset_list_all = ["PTS", "PPC", "LTC", "BTC", "WTI", "SLV", "GLD", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD"]
 delegate_list = config["delegate_list"]
+
+if sys.argv[1] == "ALL":
+ asset_list_publish = asset_list_all
+else:
+ asset_list_publish = sys.argv
+ asset_list_publish.pop(0)
 
 def fetch_from_btc38():
   url="http://api.btc38.com/v1/ticker.php"
@@ -158,15 +164,15 @@ def update_feed(assets):
         headers = {'content-type': 'application/json'}
         request = {
             "method": "wallet_publish_feeds",
-            "params": [delegate, assets],
+            "params": [delegate, assets, payaccount],
             "jsonrpc": "2.0",
             "id": 1
             }
         while True:
           try:
             responce = requests.post(url, data=json.dumps(request), headers=headers, auth=auth)
-            result = json.loads(vars(responce)["_content"])
-            print "Update:", delegate, assets
+            result = responce.json()
+            print "Update:", delegate, assets, result
           except:
             print "Warnning: Can't connect to rpc server, retry 5 seconds later"
             time.sleep(5)
@@ -199,6 +205,6 @@ asset_list_final = []
 for asset in asset_list_publish:
    price_average[asset] = sum(price[asset])/len(price[asset])
    if price_average[asset] > 0.0:
-     asset_list_final.append({ asset : price_average[asset] })
+     asset_list_final.append([ asset, price_average[asset] ])
 pprint( asset_list_final )
 update_feed(asset_list_final)
