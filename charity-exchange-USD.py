@@ -34,4 +34,4 @@ if __name__ == "__main__":
  ## put bid order 
  quant = balance * percentage
  print "wallet_market_submit_ask %s %f %s %f %s\n\n" %(accountname,  quant, "BTSX", price, "USD")
- print rpc.marketask(accountname,  quant, "BTSX", price, "USD")
+ print rpc.marketask(accountname, quant, "BTSX", price, "USD")

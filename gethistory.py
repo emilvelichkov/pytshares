@@ -5,10 +5,10 @@ import sys
 
 if __name__ == "__main__":
      rpc = btsrpcapi(config.url, config.user, config.passwd)
-     tx = sys.argv[1] 
+     accountname = sys.argv[1]
      print rpc.rpcexec({
-       "method": "blockchain_get_block",
-       "params": [tx],
+       "method": "wallet_account_transaction_history",
+       "params": [accountname],
        "jsonrpc": "2.0",
        "id": 0
        })

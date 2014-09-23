@@ -5,9 +5,9 @@ import re
 
 payouttarget = "delegate.xeroc"
 withdrawfee = 0.5 * 1e5;
+rpc = btsrpcapi(config.url, config.user, config.passwd)
 
 if __name__ == "__main__":
- rpc = btsrpcapi(config.url, config.user, config.passwd)
  print rpc.getstatus()
  print rpc.walletopen("delegate")
  rpc.disableblockproduction("ALL")

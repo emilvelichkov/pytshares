@@ -127,7 +127,7 @@ class btsrpcapi :
  def approvedelegate(self,name) :
      return self.rpcexec({
          "method": "wallet_approve_delegate",
-         "params": [name, "true"],
+         "params": [name, "1"],
          "jsonrpc": "2.0",
          "id": 0
      })
