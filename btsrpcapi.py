@@ -12,7 +12,6 @@ class btsrpcapi :
      self.auth    = (user,pwd)
      self.url     = url
      self.headers = {'content-type': 'application/json'}
-
    
  def rpcexec(self,payload) :
      response = requests.post(self.url, data=json.dumps(payload), headers=self.headers, auth=self.auth)
@@ -206,6 +205,22 @@ class btsrpcapi :
      return self.rpcexec({
          "method": "wallet_account_update_registration",
          "params": [name, payee, data, payrate],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
+ def listdelegates(self,first,limit) :
+     return self.rpcexec({
+         "method": "blockchain_list_delegates",
+         "params": [first, limit],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
+ def getdelfeeds(self,delname) :
+     return self.rpcexec({
+         "method": "blockchain_get_feeds_from_delegate",
+         "params": [delname],
          "jsonrpc": "2.0",
          "id": 0
      })
