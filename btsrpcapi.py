@@ -224,7 +224,3 @@ class btsrpcapi :
          "jsonrpc": "2.0",
          "id": 0
      })
-
- if __name__ == "__main__":
-         print getstatus()
-
