@@ -3,3 +3,5 @@ papersharedrop/addresses
 config.*
 *.pyc
 *.csv
+*.png
+genesis.json
