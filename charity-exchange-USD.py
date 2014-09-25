@@ -27,11 +27,11 @@ if __name__ == "__main__":
 
  ## getbalance
  balances = rpc.getbalance(accountname)
- for b in json.loads(balances)[ "result" ][ 0 ][ 1 ][ 0 ] :
-   if b[ 0 ] == "BTSX" :
+ for b in json.loads(balances)[ "result" ][ 0 ][ 1 ] :
+   if b[ 0 ] == 0 :
        balance = float(b[ 1 ])/1.0e5;
 
- ## put bid order 
- quant = balance * percentage
- print "wallet_market_submit_ask %s %f %s %f %s\n\n" %(accountname,  quant, "BTSX", price, "USD")
- print rpc.marketask(accountname, quant, "BTSX", price, "USD")
+## put bid order 
+quant = balance * percentage
+print "wallet_market_submit_ask %s %f %s %f %s\n\n" %(accountname,  quant, "BTSX", price, "USD")
+print rpc.marketask(accountname, quant, "BTSX", price, "USD")
