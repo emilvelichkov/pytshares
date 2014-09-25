@@ -7,6 +7,7 @@ import sys
 import datetime, threading, time
 from pprint import pprint
 import statistics
+import re
 
 headers = {'content-type': 'application/json',
    'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
@@ -25,7 +26,7 @@ config_data.close()
 ## -----------------------------------------------------------------------
 auth = (config["bts_rpc"]["username"], config["bts_rpc"]["password"])
 url  = config["bts_rpc"]["url"]
-asset_list_all = ["PTS", "PPC", "LTC", "BTC", "WTI", "SLV", "GLD", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD"]
+asset_list_all = ["PTS", "PPC", "LTC", "BTC", "SLV", "GLD", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD"] #  "WTI" missing as incompatible
 delegate_list = config["delegate_list"]
 
 if sys.argv[1] == "ALL":
@@ -144,18 +145,21 @@ def fetch_from_poloniex():
    time.sleep(1)
    fetch_from_poloniex()
 
-# def fetch_from_bitrex():
-#   availableAssets = [ "BTSX", "LTC", "BTSX", "PTS", "PPC" ]
-#   try:
-#    url="https://bittrex.com/api/v1.1/public/getmarketsummaries"
-#    response = requests.get(url=url, headers=headers)
-#    result = response.json()["result"]
-#    for coin in availableAssets :
-#     if coin not in price_in_btc : price_in_btc[ coin ] = []
-#     price_in_btc[ coin ].append(float(result["BTC-"+coin.upper()]["Last"]))
-#   except:
-#     print("Warning: unknown error")
-#     return
+def fetch_from_bitrex():
+  availableAssets = [ "BTSX", "LTC", "BTSX", "PTS", "PPC" ]
+  try:
+   url="https://bittrex.com/api/v1.1/public/getmarketsummaries"
+   response = requests.get(url=url, headers=headers)
+   result = response.json()["result"]
+   for coin in result :
+    if( coin[ "MarketName" ] in ["BTC-"+a for a in availableAssets] ) :
+     mObj    = re.match( 'BTC-(.*)', coin[ "MarketName" ] )
+     altcoin = mObj.group(1)
+     if altcoin not in price_in_btc : price_in_btc[ altcoin ] = []
+     price_in_btc[ altcoin ].append(float(coin["Last"]))
+  except:
+    print("Warning: unknown error")
+    return
 
 def convert_all():
  for asset in price_in_cny :
@@ -203,12 +207,12 @@ def get_btc_to_fiat():
    time.sleep(1)
    get_btc_to_fiat()
 
-def update_feed(assets):
+def update_feed(assets,payee):
   for delegate in delegate_list:
         headers = {'content-type': 'application/json'}
         request = {
             "method": "wallet_publish_feeds",
-            "params": [delegate, assets, payaccount],
+            "params": [delegate, assets, payee],
             "jsonrpc": "2.0",
             "id": 1
             }
@@ -230,14 +234,6 @@ price_in_eur = {}
 price_in_btsx    = {}
 price_in_btsx_average = {}
 
-for asset in asset_list_all :
- price_in_btsx[asset] = []
- price_in_cny[asset]  = []
- price_in_usd[asset]  = []
- price_in_btc[asset]  = []
- price_in_eur[asset]  = []
- price_in_btsx_average[asset] = 0.0
-
 print("Loading Yahoo")
 fetch_from_yahoo()
 print("Loading BTC38")
@@ -246,8 +242,8 @@ print("Loading BTer")
 fetch_from_bter()
 print("Loading Poloniex")
 fetch_from_poloniex()
-# print("Loading bitrex")
-# fetch_from_bitrex()
+print("Loading bitrex")
+fetch_from_bitrex()
 print("converting btc to USD/CNY/EUR")
 convert_all()
 print("Load btc to fiat")
@@ -265,4 +261,5 @@ for asset in asset_list_publish:
   price_in_btsx_average[asset] = statistics.median(price_in_btsx[asset])
   if price_in_btsx_average[asset] > 0.0:
     asset_list_final.append([ asset, price_in_btsx_average[asset] ])
-update_feed(asset_list_final)
+pprint( asset_list_final )
+update_feed(asset_list_final, payaccount)
