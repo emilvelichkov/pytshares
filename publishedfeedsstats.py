@@ -18,6 +18,7 @@ if __name__ == "__main__":
   feeds = (json.loads(rpc.getdelfeeds(delegate["name"]))["result"])
   numfeeds = len(feeds)
   validfeed = []
+  validfeeds = []
   for feed in feeds :
    feedtime = datetime.strptime(feed["last_update"],"%Y%m%dT%H%M%S")
    delta    = (currenttime-feedtime)
@@ -25,10 +26,11 @@ if __name__ == "__main__":
    feedprice[ feed["asset_symbol"] ].append(feed[ "price" ])
    if delta.total_seconds()/60/60/24 < 1.0 :
     validfeed.append(feed["asset_symbol"])
+    validfeeds.append( feed );
   delegatefeeds.append({
                         "name" : str(delegate["name"]),
                         "numValidFeeds":len(validfeed),
-                        "feeds": feeds,
+                        "feeds": validfeeds,
                         "top": top
                        })
 
@@ -50,7 +52,7 @@ if __name__ == "__main__":
  t2.align                   = 'l'                                                                                                                                                                                                    
  t2.border                  = True
  for p in delegatefeeds : 
-  assetstr = ", ".join([ "%s, %11.8f (med%+8.3f%%)" % (a["asset_symbol"], a[ "price" ], 100*(a[ "price" ]-medianPrice[ a[ "asset_symbol" ]])/medianPrice[ a[ "asset_symbol" ]]) for a in p[ "feeds" ] ])
+  assetstr = "\n".join([ "%s, %11.8f (med%+8.3f%%)" % (a["asset_symbol"], a[ "price" ], 100*(a[ "price" ]-medianPrice[ a[ "asset_symbol" ]])/medianPrice[ a[ "asset_symbol" ]]) for a in p[ "feeds" ] ])
   t2.add_row([p["name"], p["top"], p["numValidFeeds"], assetstr ])
 
  #print(t2.get_string(sortby="numFeeds", reversesort=True))
