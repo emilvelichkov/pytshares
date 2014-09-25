@@ -4,9 +4,9 @@
 import requests
 import json
 import sys
-
 import datetime, threading, time
 from pprint import pprint
+import statistics
 
 headers = {'content-type': 'application/json',
    'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
@@ -43,7 +43,7 @@ def fetch_from_btc38():
    response = requests.get(url=url, params=params, headers=headers)
    result = response.json()
   except: 
-   print "%s" % (response.text)
+   print("%s" % (response.text))
   for coin in availableAssets :
    if "ticker" in result[coin.lower()] and result[coin.lower()]["ticker"]:
     if coin not in price_in_btc : price_in_btc[ coin ] = []
@@ -55,7 +55,7 @@ def fetch_from_btc38():
    response = requests.get(url=url, params=params, headers=headers)
    result = response.json()
   except: 
-   print "%s" % (response.text)
+   print("%s" % (response.text))
   for coin in availableAssets :
    if "ticker" in result[coin.lower()] and result[coin.lower()]["ticker"]:
     if coin not in price_in_cny : price_in_cny[ coin ] = []
@@ -80,16 +80,16 @@ def fetch_from_yahoo():
    yahooprices =  response.text.split( '\r\n' )
    for i,a in enumerate(availableAssets,1) :
     if bitassetname(a.upper()) not in price_in_usd : price_in_usd[ bitassetname(a.upper()) ] = []
-    price_in_usd[ bitassetname(a.upper()) ].append(float(yahooprices[i-1]))
+    price_in_usd[ bitassetname(a.upper()) ].append(1/float(yahooprices[i-1])) # flipped market
    ##########################
-   yahooAssets = ",".join(["CNY"+a+"=X" for a in availableAssets])
+   yahooAssets = ",".join([a+"CNY=X" for a in availableAssets])
    url="http://download.finance.yahoo.com/d/quotes.csv"
    params = {'s':yahooAssets,'f':'l1','e':'.csv'}
    response = requests.get(url=url, headers=headers,params=params)
    yahooprices =  response.text.split( '\r\n' )
    for i,a in enumerate(availableAssets,1) :
     if bitassetname(a.upper()) not in price_in_cny : price_in_cny[ bitassetname(a.upper()) ] = []
-    price_in_cny[ bitassetname(a.upper()) ].append(1/float(yahooprices[i-1])) ## FIXME WTF!?!?!?!
+    price_in_cny[ bitassetname(a.upper()) ].append(float(yahooprices[i-1])) ## market is the other way round! (yahooAssets)
    ##########################
    yahooAssets = ",".join(["EUR"+a+"=X" for a in availableAssets])
    url="http://download.finance.yahoo.com/d/quotes.csv"
@@ -101,9 +101,9 @@ def fetch_from_yahoo():
     price_in_eur[ bitassetname(a.upper()) ].append(float(yahooprices[i-1]))
    ##########################
   except:
-   print "Warning: unknown error, try again after 1 seconds"
+   print("Warning: unknown error, try again after 1 seconds")
    time.sleep(1)
-   get_rate_from_yahoo()
+   fetch_from_yahoo()
 
 def fetch_from_bter():
   url="http://data.bter.com/api/1/tickers"
@@ -111,17 +111,22 @@ def fetch_from_bter():
    response = requests.get(url=url, headers=headers)
    result = response.json()
 
-   availableAssets = [ "BTSX", "LTC", "BTSX", "PTS", "PPC" ]
+   availableAssets = [ "LTC", "BTSX", "PTS", "PPC" ]
    for coin in availableAssets :
     if coin not in price_in_btc : price_in_btc[ coin ] = []
     price_in_btc[ coin ].append(float(result[coin.lower()+"_btc"]["last"]))
+
+   availableAssets = [ "BTC",  "LTC", "BTSX" ]
+   for coin in availableAssets :
+    if coin not in price_in_usd : price_in_usd[ coin ] = []
+    price_in_usd[ coin ].append(float(result[coin.lower()+"_usd"]["last"]))
 
    availableAssets = [ "BTSX", "BTC", "LTC", "BTSX", "PTS", "PPC" ]
    for coin in availableAssets :
     if coin not in price_in_cny : price_in_cny[ coin ] = []
     price_in_cny[ coin ].append(float(result[coin.lower()+"_cny"]["last"]))
   except: 
-    print "Warning: unknown error, try again after 1 seconds"
+    print("Warning: unknown error, try again after 1 seconds")
     time.sleep(1)
     fetch_from_bter()
 
@@ -131,12 +136,11 @@ def fetch_from_poloniex():
    response = requests.get(url=url, headers=headers)
    result = response.json()
    availableAssets = [ "LTC", "BTSX", "PTS", "PPC" ]
-   price_in_btsx["BTC"].append(float(result["BTC_BTSX"]["last"]))
    for coin in availableAssets :
     if coin not in price_in_btc : price_in_btc[ coin ] = []
     price_in_btc[ coin ].append(float(result["BTC_"+coin.upper()]["last"]))
   except: 
-   print "Warning: unknown error, try again after 1 seconds"
+   print("Warning: unknown error, try again after 1 seconds")
    time.sleep(1)
    fetch_from_poloniex()
 
@@ -150,22 +154,30 @@ def fetch_from_poloniex():
 #     if coin not in price_in_btc : price_in_btc[ coin ] = []
 #     price_in_btc[ coin ].append(float(result["BTC-"+coin.upper()]["Last"]))
 #   except:
-#     print "Warning: unknown error"
+#     print("Warning: unknown error")
 #     return
 
 def convert_all():
-  for asset in price_in_cny :
-   for i in price_in_cny[ asset ] :
-    for j in price_in_cny[ "BTSX" ] :
-     if asset not in price_in_btsx : price_in_btsx[ asset ] = []
-     price_in_btsx[asset].append(float("%.3g" % float( j/i)))
+ for asset in price_in_cny :
+  for i in price_in_cny[ asset ] :
+   for j in price_in_cny[ "BTSX" ] :
+    if asset not in price_in_btsx : price_in_btsx[ asset ] = []
+    price_in_btsx[asset].append(float("%.5g" % float( j/i)))
 
-  for asset in price_in_btc :
-   for i in price_in_btc[ asset ] :
-    for j in price_in_btc[ "BTSX" ] :
-     if asset not in price_in_btsx : price_in_btsx[ asset ] = []
-     price_in_btsx[asset].append(float("%.3g" % float(j/i)))
+ for asset in price_in_btc :
+  for i in price_in_btc[ asset ] :
+   for j in price_in_btc[ "BTSX" ] :
+    if asset not in price_in_btsx : price_in_btsx[ asset ] = []
+    price_in_btsx[asset].append(float("%.5g" % float(j/i)))
 
+ for asset in price_in_usd :
+  for i in price_in_usd[ asset ] :
+   for j in price_in_usd[ "BTSX" ] :
+    if asset not in price_in_btsx : price_in_btsx[ asset ] = []
+    price_in_btsx[asset].append(float("%.5g" % float( j/i)))
+ 
+def get_btc_to_fiat():
+ try:
   url = "https://api.bitcoinaverage.com/ticker/USD/"
   response = requests.get(url=url, headers=headers)
   result = response.json()
@@ -186,8 +198,10 @@ def convert_all():
   priceBTC = float(result["24h_avg"])
   for b in price_in_btsx["BTC"] :
    price_in_btsx["CNY"].append(b*priceBTC)
-
-
+ except:
+   print("Warning: unknown error, try again after 1 seconds")
+   time.sleep(1)
+   get_btc_to_fiat()
 
 def update_feed(assets):
   for delegate in delegate_list:
@@ -202,9 +216,9 @@ def update_feed(assets):
           try:
             response = requests.post(url, data=json.dumps(request), headers=headers, auth=auth)
             result = response.json()
-            print "Update:", delegate, assets, result
+            print("Update:", delegate, assets, result)
           except:
-            print "Warnning: Can't connect to rpc server, retry 5 seconds later"
+            print("Warnning: Can't connect to rpc server, retry 5 seconds later")
             time.sleep(5)
             continue
           break
@@ -224,29 +238,31 @@ for asset in asset_list_all :
  price_in_eur[asset]  = []
  price_in_btsx_average[asset] = 0.0
 
-print "Loading Yahoo"
+print("Loading Yahoo")
 fetch_from_yahoo()
-print "Loading BTC38"
+print("Loading BTC38")
 fetch_from_btc38()
-print "Loading BTer"
+print("Loading BTer")
 fetch_from_bter()
-print "Loading Poloniex"
+print("Loading Poloniex")
 fetch_from_poloniex()
-# print "Loading bitrex"
+# print("Loading bitrex")
 # fetch_from_bitrex()
-print "converting btc to USD/CNY/EUR"
+print("converting btc to USD/CNY/EUR")
 convert_all()
+print("Load btc to fiat")
+get_btc_to_fiat()
 
-# pprint( price_in_btc  )
-# pprint( price_in_usd  )
-# pprint( price_in_eur  )
-# pprint( price_in_cny  )
-# pprint( price_in_btsx )
+#pprint( price_in_btc  )
+#pprint( price_in_usd  )
+#pprint( price_in_eur  )
+#pprint( price_in_cny  )
+#pprint( price_in_btsx )
 
 asset_list_final = []
 for asset in asset_list_publish:
  if len(price_in_btsx[asset]) > 0 :
-  price_in_btsx_average[asset] = sum(price_in_btsx[asset])/len(price_in_btsx[asset])
+  price_in_btsx_average[asset] = statistics.median(price_in_btsx[asset])
   if price_in_btsx_average[asset] > 0.0:
     asset_list_final.append([ asset, price_in_btsx_average[asset] ])
 update_feed(asset_list_final)
