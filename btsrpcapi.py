@@ -34,6 +34,17 @@ class btsrpcapi :
         "id": 0
      })
 
+ def getassetbalance(self,name,asset) :
+     balance = self.rpcexec({
+        "method": "wallet_account_balance",
+        "params": [name],
+        "jsonrpc": "2.0",
+        "id": 0
+     })
+     for b in json.loads(balance)[ "result" ][ 0 ][ 1 ]:
+      if b[ 0 ] == asset : return float(b[ 1 ])
+     return -1
+
  def getaccount(self,name) :
      return self.rpcexec({
         "method": "blockchain_get_account",
