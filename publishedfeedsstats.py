@@ -6,7 +6,7 @@ from datetime import datetime
 from prettytable import PrettyTable
 import statistics
 
-numDelegates = 110
+numDelegates = 101
 
 if __name__ == "__main__":
  delegatefeeds = []
@@ -50,9 +50,8 @@ if __name__ == "__main__":
  t2.align                   = 'l'                                                                                                                                                                                                    
  t2.border                  = True
  for p in delegatefeeds : 
-  for a in p[ "feeds" ] : 
-   assetstr = "%s (off by:%.3f%%)" % (a["asset_symbol"], 100*abs(a[ "price" ]-medianPrice[ a[ "asset_symbol" ]]))
-   t2.add_row([p["name"], p["top"], p["numValidFeeds"], assetstr ])
+  assetstr = ", ".join([ "%s, %11.8f (med%+8.3f%%)" % (a["asset_symbol"], a[ "price" ], 100*(a[ "price" ]-medianPrice[ a[ "asset_symbol" ]])/medianPrice[ a[ "asset_symbol" ]]) for a in p[ "feeds" ] ])
+  t2.add_row([p["name"], p["top"], p["numValidFeeds"], assetstr ])
 
  #print(t2.get_string(sortby="numFeeds", reversesort=True))
  print(t2.get_string(sortby="top", reversesort=False))
