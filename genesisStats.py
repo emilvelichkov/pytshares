@@ -12,22 +12,35 @@ import matplotlib.pyplot as plt
 from numpy.random import randn
 from matplotlib.ticker import FuncFormatter
 
-json_data=open("genesis.json").read()
-data = json.loads(json_data)
+# The supply in the genesis_btsx.json is BIPS  (1billion with a precision of 10e6)  
+# dividing by 5x10e5 adjusts the BIPS to 2 billion BTSX supply.
+correctionTerm = 500000.0
+supply         = 2e9
+n              = 10
+nBins          = 5000
 
-stakes = []
-for b in data[ "balances" ] :
-    stakes.append( float(b[ 1 ])/1.0e5 )
-
-sumStakesMeas  = np.sum( stakes )
-sumStakes      = 2*1e12
-correctionTerm = (float( sumStakesMeas/sumStakes ))
-print( "Correction term: 1/%7.2f" % (1/correctionTerm) )
-stakes         = [ s * correctionTerm for s in stakes ]
-
+with open('genesis.json', 'rt') as f:
+ stakes = [ i[1]/correctionTerm for i in json.load(f)['balances']]
 sortedStakes = sorted( stakes )
-cumulSum     = np.cumsum( sortedStakes )
 maxValue     = np.ceil(np.log10(sortedStakes[-1]))
+
+print("-"*80)
+print("top %d addresses collective percentage"%n)
+print("-"*80)
+for i in range ( 1, 10 ) :
+    myNum = sum(sortedStakes[ -i: ])
+    print( "top {0:>4,} addresses collectively own {1:>15,.0f} BTSX ({2:>6.2f}%)".format(i,myNum,myNum/supply*100))
+
+print("-"*80)
+print("top %d addresses individual percentage"%n)
+print("-"*80)
+for i in range ( 1, n ) :
+    myNum = sortedStakes[-i]
+    print( "top {0:>4,} addresse individually owns {1:>15,.0f} BTSX ({2:>6.2f}%)".format(i,myNum,myNum/supply*100))
+
+print("-"*80)
+print("address/amount distribution")
+print("-"*80)
 listOfAmounts = []
 for i in range( 1, int(maxValue+1)):
  listOfAmounts.append(1*pow(10,i))
@@ -37,15 +50,12 @@ for i in range( 1, int(maxValue+1)):
  listOfAmounts.append(9*pow(10,i))
 
 for i in listOfAmounts :
- nBelow = len(np.where( cumulSum < i )[ 0 ])
- nAbove = len( stakes ) - nBelow
- print( "address with >{0:>12,} : {1:>8,}".format(i, nAbove) )
+ num = len([t for t in sortedStakes if t>i])
+ if num<=0 : break
+ print( "address with >{0:>15,} BTSX : {1:>8,}".format(i, num) )
 
-nBins = 5000
 n, bins = np.histogram((stakes), nBins)
-
 plt.figure()
-
 plt.autoscale(tight=1,axis='both',enable=1)
 plt.grid(which='both')
 plt.xlabel('address index')
