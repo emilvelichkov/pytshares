@@ -12,9 +12,6 @@ import re
 from math import fabs
 import numpy as num
 
-headers = {'content-type': 'application/json',
-   'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
-
 ## -----------------------------------------------------------------------
 ## Load Config
 ## -----------------------------------------------------------------------
@@ -25,6 +22,8 @@ config_data.close()
 ## -----------------------------------------------------------------------
 ## function about bts rpc
 ## -----------------------------------------------------------------------
+headers = {'content-type': 'application/json',
+   'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
 auth = (config["bts_rpc"]["username"], config["bts_rpc"]["password"])
 url  = config["bts_rpc"]["url"]
 asset_list_all = ["PTS", "PPC", "LTC", "BTC", "SLV", "GLD", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD"] #  "WTI" missing as incompatible
@@ -35,6 +34,43 @@ if sys.argv[1] == "ALL":
 else:
  asset_list_publish = sys.argv
  asset_list_publish.pop(0)
+
+def publish_rule():
+ #################
+ # - if you haven't published a price in the past 20 minutes
+ # - if REAL_PRICE < MEDIAN and YOUR_PRICE > MEDIAN publish price
+ # - if REAL_PRICE > MEDIAN and YOUR_PRICE < MEDIAN and abs( YOUR_PRICE - REAL_PRICE ) / REAL_PRICE > 0.005 publish price
+ # The goal is to force the price down rapidly and allow it to creep up slowly.
+ # By publishing prices more often it helps market makers maintain the peg and
+ # minimizes opportunity for shorts to sell USD below the peg that the market
+ # makers then have to absorb.
+ # If we can get updates flowing smoothly then we can gradually reduce the spread in the market maker bots.
+ # *note: all prices in USD per BTSX
+ # if you haven't published a price in the past 20 minutes, and the price change more than 0.5%
+ #################
+ # YOUR_PRICE = Your current published price.                    = myCurrentFeed[asset]
+ # REAL_PRICE = Lowest of external feeds                         = realPrice[asset]
+ # MEDIAN = current median price according to the blockchain.    = price_median_blockchain[asset]
+ #################
+ for asset in asset_list_publish :
+  ## Define REAL_PRICE
+  realPrice[asset] = statistics.median( price_in_btsx[asset] )
+  ## Rules 
+  if (datetime.utcnow()-oldtime[asset]).total_seconds() > config["maxAgeFeedInSeconds"] :
+        print("Feeds for %s too old! Force updating!" % asset)
+        return True
+  elif realPrice[asset]     < price_median_blockchain[asset] and \
+       myCurrentFeed[asset] > price_median_blockchain[asset]:
+        print("External price move for %s: realPrice(%f) < feedmedian(%f) and newprice(%f) > feedmedian(%f) Force updating!"\
+               % (asset,realPrice[asset],price_median_blockchain[asset],realPrice[asset],price_median_blockchain[asset]))
+        return True
+  elif fabs(myCurrentFeed[asset]-realPrice[asset])/realPrice[asset] > config["change_min"] and\
+       (datetime.utcnow()-oldtime[asset]).total_seconds() > config["maxAgeFeedInSeconds"] > 20*60:
+        print("New Feeds differs too much for %s %.2f > %.2f! Force updating!" \
+               % (asset,fabs(myCurrentFeed[asset]-realPrice[asset]), config["change_min"]))
+        return True
+ ## default: False
+ return False
 
 def fetch_from_btc38():
   url="http://api.btc38.com/v1/ticker.php"
@@ -84,7 +120,7 @@ def fetch_from_bter():
     volume_in_cny[ coin ].append(float(result[coin.lower()+"_cny"]["vol_cny"]))
   except: 
     print("Warning: unknown error, try again after 1 seconds")
-    time.sleep(1)
+    time.sleep(15)
     fetch_from_bter()
 
 def fetch_from_poloniex():
@@ -98,7 +134,7 @@ def fetch_from_poloniex():
     volume_in_btc[ coin ].append(float(result["BTC_"+coin.upper()]["baseVolume"]))
   except: 
    print("Warning: unknown error, try again after 1 seconds")
-   time.sleep(1)
+   time.sleep(15)
    fetch_from_poloniex()
 
 def fetch_from_bitrex():
@@ -155,7 +191,7 @@ def fetch_from_yahoo():
    ##########################
   except:
    print("Warning: unknown error, try again after 1 seconds")
-   time.sleep(1)
+   time.sleep(15)
    fetch_from_yahoo()
 
  # def get_btc_to_fiat():
@@ -192,7 +228,7 @@ def fetch_from_yahoo():
  # 
  #  except:
  #    print("Warning: unknown error, try again after 1 seconds")
- #    time.sleep(1)
+ #    time.sleep(15)
  #    get_btc_to_fiat()
 
 def fetch_from_wallet():
@@ -214,12 +250,12 @@ def fetch_from_wallet():
   #  "jsonrpc": "2.0", "id": 1 }
   #response = requests.post(url, data=json.dumps(request), headers=headers, auth=auth)
   #result = response.json()
-  #currprice[asset] = 0.0 # init offline markets
+  #realPrice[asset] = 0.0 # init offline markets
   #for os in result["result"] :
   # for o in os :
   #  if (o["type"]=="bid_order") :
   #   ratio = float(o["market_index"]["order_price"]["ratio"])
-  #   currprice[asset] = ratio * assetprecision[asset]/assetprecision["BTSX"]
+  #   realPrice[asset] = ratio * assetprecision[asset]/assetprecision["BTSX"]
   ##############################
   headers = {'content-type': 'application/json'}
   request = {
@@ -228,10 +264,10 @@ def fetch_from_wallet():
     "jsonrpc": "2.0", "id": 1 }
   response = requests.post(url, data=json.dumps(request), headers=headers, auth=auth)
   result = response.json()
-  price_median_wallet[asset] = 0.0
+  price_median_blockchain[asset] = 0.0
   for feed in result["result"] :
    if feed["delegate_name"] == "MARKET":
-    price_median_wallet[asset] = float(feed["median_price"])
+    price_median_blockchain[asset] = float(feed["median_price"])
  ##############################
  for delegate in delegate_list:
   headers = {'content-type': 'application/json'}
@@ -242,44 +278,9 @@ def fetch_from_wallet():
   response = requests.post(url, data=json.dumps(request), headers=headers, auth=auth)
   result = response.json()
   for f in result[ "result" ] :
-   oldfeeds[ f[ "asset_symbol" ] ] = f[ "price" ]
+   myCurrentFeed[ f[ "asset_symbol" ] ] = f[ "price" ]
    oldtime[ f[ "asset_symbol" ] ] = datetime.strptime(f["last_update"],"%Y%m%dT%H%M%S")
  ##############################
-
-def publish_rule():
- #################
- # if REAL_PRICE < MEDIAN and YOUR_PRICE > MEDIAN publish price
- # if you haven't published a price in the past 20 minutes
- #  if REAL_PRICE > MEDIAN and YOUR_PRICE < MEDIAN and abs( YOUR_PRICE - REAL_PRICE ) / REAL_PRICE > 0.005 publish price
- # The goal is to force the price down rapidly and allow it to creep up slowly.
- # By publishing prices more often it helps market makers maintain the peg and
- # minimizes opportunity for shorts to sell USD below the peg that the market
- # makers then have to absorb.
- # If we can get updates flowing smoothly then we can gradually reduce the spread in the market maker bots.
- # *note: all prices in USD per BTSX
- # if you haven't published a price in the past 20 minutes, and the price change more than 0.5%
- #################
- # YOUR_PRICE = Your current published price.                    = oldfeeds[asset]
- # REAL_PRICE = Lowest of external feeds                         = currprice[asset]
- # MEDIAN = current median price according to the blockchain.    = price_median_wallet[asset]
- #################
- for asset in asset_list_publish :
-  currprice[asset] = min( price_in_btsx[asset] )
-  if (datetime.utcnow()-oldtime[asset]).total_seconds() > config["maxAgeFeedInSeconds"] :
-   print("Feeds for %s too old! Force updating!" % asset)
-   return True
-  elif currprice[asset] < price_median_wallet[asset] and \
-        oldfeeds[asset] > price_median_wallet[asset]:
-   print("External price move for %s: currprice(%f) < feedmedian(%f) and newprice(%f) > feedmedian(%f) Force updating!"\
-          % (asset,currprice[asset],price_median_wallet[asset],currprice[asset],price_median_wallet[asset]))
-   return True
-  elif fabs(oldfeeds[asset]-currprice[asset])/currprice[asset] > config["change_min"] and\
-       (datetime.utcnow()-oldtime[asset]).total_seconds() > config["maxAgeFeedInSeconds"] > 20*60:
-   print("New Feeds differs too much for %s %.2f > %.2f! Force updating!" \
-          % (asset,fabs(oldfeeds[asset]-currprice[asset]), config["change_min"]))
-   return True
- ## default: False
- return False
 
 def update_feed(assets,payee):
   for delegate in delegate_list:
@@ -351,9 +352,9 @@ if __name__ == "__main__":
  price_in_btsx         = {}
  price_in_btsx_average = {}
  volume                = {}
- oldfeeds              = {}
- price_median_wallet   = {}
- currprice             = {}
+ myCurrentFeed              = {}
+ price_median_blockchain   = {}
+ realPrice             = {}
  assetprecision        = {}
  assetprecision["BTSX"] = 1e5
  oldtime               = {}
@@ -370,12 +371,13 @@ if __name__ == "__main__":
   volume_in_cny[ asset ]       = []
   volume_in_btsx[ asset ]       = []
   price_in_btsx_average[asset] = 0.0
-  oldfeeds[asset]              = 0.0
-  price_median_wallet[asset]   = 0.0
-  currprice[asset]             = 0.0
+  myCurrentFeed[asset]              = 0.0
+  price_median_blockchain[asset]   = 0.0
+  realPrice[asset]             = 0.0
   oldtime[asset]               = datetime.utcnow()
 
  ## Get prices and stats #############################
+ print( "="*80 )
  print("Loading old feeds")
  fetch_from_wallet()
  print("Loading Yahoo")
@@ -401,8 +403,9 @@ if __name__ == "__main__":
     asset_list_final.append([ asset, price_in_btsx_average[asset] ])
     print("{0}: new price: {1:>10.5f} (change my old: {2:+7.2f}%) (change to curr. median: {3:+7.2f}%) (my feed is {4!s})".format(\
                asset,price_in_btsx_average[asset],\
-               (price_in_btsx_average[asset]-oldfeeds[asset])           *100,
-               (price_in_btsx_average[asset]-price_median_wallet[asset])*100,\
+               (price_in_btsx_average[asset]-myCurrentFeed[asset])           *100,
+               (price_in_btsx_average[asset]-price_median_blockchain[asset])*100,\
                str(datetime.utcnow()-oldtime[asset]) ))
  if publish_rule() :
   update_feed(asset_list_final, config["payaccount"])
+  print("finished")
