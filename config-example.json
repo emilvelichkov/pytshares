@@ -1,0 +1,13 @@
+{
+  "bts_rpc": {
+    "url": "http://__HOST__:__PORT__/rpc",
+    "username": "user",
+    "password": "secret"
+  },
+  "asset_list_display": ["CNY", "USD", "BTC"],
+  "delegate_list": [ "delegate.xeroc", "a.delegate.xeroc", "b.delegate.xeroc", "delegate.charity", "a.delegate.charity", "c.delegate.charity"],
+  "payaccount" : "delegate.xeroc",
+  "maxAgeFeedInSeconds" : 1200,
+  "discount" : 0.995,
+  "change_min" : 0.5
+}
