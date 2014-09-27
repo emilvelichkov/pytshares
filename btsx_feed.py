@@ -407,5 +407,7 @@ if __name__ == "__main__":
                (price_in_btsx_average[asset]-price_median_blockchain[asset])*100,\
                str(datetime.utcnow()-oldtime[asset]) ))
  if publish_rule() :
+  print("Update required! Forcing now!")
   update_feed(asset_list_final, config["payaccount"])
-  print("finished")
+ else :
+  print("no update required")
