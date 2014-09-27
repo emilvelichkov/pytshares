@@ -227,13 +227,13 @@ def fetch_from_wallet():
   result = response.json()
   assetprecision[asset] = float(result["result"]["precision"])
   ##############################
-  headers = {'content-type': 'application/json'}
-  request = {
-    "method": "blockchain_market_order_book",
-    "params": [asset, "BTSX", 100],
-    "jsonrpc": "2.0", "id": 1 }
-  response = requests.post(url, data=json.dumps(request), headers=headers, auth=auth)
-  result = response.json()
+  #headers = {'content-type': 'application/json'}
+  #request = {
+  #  "method": "blockchain_market_order_book",
+  #  "params": [asset, "BTSX", 100],
+  #  "jsonrpc": "2.0", "id": 1 }
+  #response = requests.post(url, data=json.dumps(request), headers=headers, auth=auth)
+  #result = response.json()
   #currprice[asset] = 0.0 # init offline markets
   #for os in result["result"] :
   # for o in os :
@@ -263,7 +263,7 @@ def fetch_from_wallet():
   result = response.json()
   for f in result[ "result" ] :
    oldfeeds[ f[ "asset_symbol" ] ] = f[ "price" ]
-   oldtime[ f[ "asset_symbol" ] ] = datetime.strptime(f["last_update"],"%Y%m%dT%H%M%S") # all feeds are published at the same time!
+   oldtime[ f[ "asset_symbol" ] ] = datetime.strptime(f["last_update"],"%Y%m%dT%H%M%S")
  ##############################
 
 def publish_rule():
@@ -272,7 +272,9 @@ def publish_rule():
  # if you haven't published a price in the past 20 minutes
  #  if REAL_PRICE > MEDIAN and YOUR_PRICE < MEDIAN and abs( YOUR_PRICE - REAL_PRICE ) / REAL_PRICE > 0.005 publish price
  # The goal is to force the price down rapidly and allow it to creep up slowly.
- # By publishing prices more often it helps market makers maintain the peg and minimizes opportunity for shorts to sell USD below the peg that the market makers then have to absorb.
+ # By publishing prices more often it helps market makers maintain the peg and
+ # minimizes opportunity for shorts to sell USD below the peg that the market
+ # makers then have to absorb.
  # If we can get updates flowing smoothly then we can gradually reduce the spread in the market maker bots.
  # *note: all prices in USD per BTSX
  # if you haven't published a price in the past 20 minutes, and the price change more than 0.5%
@@ -281,8 +283,8 @@ def publish_rule():
  # REAL_PRICE = Lowest of external feeds                         = currprice[asset]
  # MEDIAN = current median price according to the blockchain.    = price_median_wallet[asset]
  #################
-
  for asset in asset_list_publish :
+  currprice[asset] = min( price_in_btsx[asset] )
   if (datetime.utcnow()-oldtime[asset]).total_seconds() > maxAgeFeedInSeconds :
    print("Feeds for %s too old! Force updating!" % asset)
    return True
@@ -357,9 +359,6 @@ convert_all()
 print("Load btc to fiat")
 get_btc_to_fiat()
 
-for asset in asset_list_all : 
- # REAL_PRICE = Lowest of external feeds
- currprice[asset] = min( price_in_btsx[asset] )
 
 ## Discount!!
 asset_list_final = []
