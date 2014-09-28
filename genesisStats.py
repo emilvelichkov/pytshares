@@ -26,8 +26,8 @@ from matplotlib.ticker import FuncFormatter
 # https://coinplorer.com/PTS/Blocks/0000001418b7dbf283dc1e7454fafdafc8934ba8640c263ee77de92e5eca74ee )
 chain          = "DNS"
 filename       = 'genesis_dns.json'
-correctionTerm = 1/1000 / 1e5
-supply         = 2e9
+correctionTerm = 1/1000  /1e5 # 1e5 = precision
+supply         = 5e9
 
 ##############################
 n              = 10
@@ -37,6 +37,8 @@ with open(filename, 'rt') as f:
 sortedStakes = sorted( stakes )
 maxValue     = np.ceil(np.log10(sortedStakes[-1]))
 
+print("-"*80)
+print("Total {1} available: {1:>25,.8f}".format(chain, sum(stakes)) )
 print("-"*80)
 print("top %d addresses collective percentage"%n)
 print("-"*80)
