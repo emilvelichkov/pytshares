@@ -4,4 +4,4 @@ config.*
 *.pyc
 *.csv
 *.png
-genesis.json
+genesis*.json
