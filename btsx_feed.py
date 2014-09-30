@@ -63,7 +63,7 @@ def fetch_from_btc38():
    response = requests.get(url=url, params=params, headers=headers)
    result = response.json()
   except: 
-   sys.exit("unknown error - btc38: %s" % (response.text))
+   sys.exit("unknown error - btc38")
   for coin in availableAssets :
    if "ticker" in result[coin.lower()] and result[coin.lower()]["ticker"]:
     price_in_btc[ coin ].append(float(result[coin.lower()]["ticker"]["last"]))
@@ -75,7 +75,7 @@ def fetch_from_btc38():
    response = requests.get(url=url, params=params, headers=headers)
    result = response.json()
   except: 
-   sys.exit("unkown error - btc38: %s" % (response.text))
+   sys.exit("unkown error - btc38")
   for coin in availableAssets :
    if "ticker" in result[coin.lower()] and result[coin.lower()]["ticker"]:
     price_in_cny[ coin ].append(float(result[coin.lower()]["ticker"]["last"]))
