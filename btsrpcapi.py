@@ -142,6 +142,30 @@ class btsrpcapi :
          "id": 0
      })
 
+ def unapprovedelegate(self,name) :
+     return self.rpcexec({
+         "method": "wallet_approve_delegate",
+         "params": [name, "0"],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
+ def disapprovedelegate(self,name) :
+     return self.rpcexec({
+         "method": "wallet_approve_delegate",
+         "params": [name, "-1"],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
+ def walletallgetaccounts(self) :
+     return self.rpcexec({
+         "method": "wallet_list_accounts",
+         "params": [],
+         "jsonrpc": "2.0",
+         "id": 0
+     })
+
  def walletgetaccounts(self) :
      return self.rpcexec({
          "method": "wallet_list_my_accounts",
