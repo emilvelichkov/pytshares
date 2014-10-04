@@ -4,10 +4,17 @@
     "username": "user",
     "password": "secret"
   },
-  "asset_list_display": ["CNY", "USD", "BTC"],
-  "delegate_list": [ "delegate.xeroc", "a.delegate.xeroc", "b.delegate.xeroc", "delegate.charity", "a.delegate.charity", "c.delegate.charity"],
-  "payaccount" : "delegate.xeroc",
-  "maxAgeFeedInSeconds" : 1200,
+  "asset_list_display": ["CNY", "USD", "BTC", "GLD"],
+  "delegate_list": [ "emski"],
+  "payaccount" : "",
+  "maxAgeFeedInSeconds" : 60000,
+  "minFeedAgeInSeconds" : 120,
   "discount" : 0.995,
-  "change_min" : 0.5
+  "minValidAssetPrice" : 0.00001,
+  "max_positive_diff" : 0.01,
+  "max_negative_diff" : 0.002,
+  "btc38_trust_level" : 1.0,
+  "bter_trust_level" : 1.0,
+  "poloniex_trust_level" : 0.5,
+  "bittrex_trust_level" : 0.5
 }

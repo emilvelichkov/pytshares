@@ -29,28 +29,40 @@ def publish_rule():
  # if you haven't published a price in the past 20 minutes, and the price change more than 0.5%
  ##############################################################################
  # YOUR_PRICE = Your current published price.                    = myCurrentFeed[asset]
- # REAL_PRICE = Lowest of external feeds                         = realPrice[asset]
+ # REAL_PRICE = Lowest of external feeds                         = medianRealPrice[asset]    # TODO: Contradiction!
  # MEDIAN = current median price according to the blockchain.    = price_median_blockchain[asset]
  ##############################################################################
+ shouldPublish = False
+ 
  for asset in asset_list_publish :
   ## Define REAL_PRICE
-  realPrice[asset] = statistics.median( price_in_btsx[asset] )
+  medianRealPrice[asset] = statistics.median( price_in_btsx[asset] )
   ## Rules 
   if (datetime.utcnow()-oldtime[asset]).total_seconds() > config["maxAgeFeedInSeconds"] :
         print("Feeds for %s too old! Force updating!" % asset)
         return True
-  elif realPrice[asset]     < price_median_blockchain[asset] and \
-       myCurrentFeed[asset] > price_median_blockchain[asset]:
-        print("External price move for %s: realPrice(%f) < feedmedian(%f) and newprice(%f) > feedmedian(%f) Force updating!"\
-               % (asset,realPrice[asset],price_median_blockchain[asset],realPrice[asset],price_median_blockchain[asset]))
-        return True
-  elif fabs(myCurrentFeed[asset]-realPrice[asset])/realPrice[asset] > config["change_min"] and\
-       (datetime.utcnow()-oldtime[asset]).total_seconds() > config["maxAgeFeedInSeconds"] > 20*60:
-        print("New Feeds differs too much for %s %.2f > %.2f! Force updating!" \
-               % (asset,fabs(myCurrentFeed[asset]-realPrice[asset]), config["change_min"]))
-        return True
+# I do not care about external factors!
+#  elif medianRealPrice[asset] < price_median_blockchain[asset] and \
+#       myCurrentFeed[asset]   > price_median_blockchain[asset]:
+#        print("External price move for %s: medianRealPrice(%f) < feedmedian(%f) and newprice(%f) > feedmedian(%f) Force updating!"\
+#               % (asset,medianRealPrice[asset],price_median_blockchain[asset],medianRealPrice[asset],price_median_blockchain[asset]))
+#        shouldPublish = True
+#  elif fabs(myCurrentFeed[asset]-medianRealPrice[asset])/medianRealPrice[asset] > config["change_min"] and\
+#       (datetime.utcnow()-oldtime[asset]).total_seconds() > config["maxAgeFeedInSeconds"] > 20*60:
+#        print("New Feeds differs too much for %s %.2f > %.2f! Force updating!" \
+#               % (asset,fabs(myCurrentFeed[asset]-medianRealPrice[asset]), config["change_min"]))
+#        shouldPublish = True
+
+# what matters is the error of my last active feed
+  elif (myCurrentFeed[asset]-price_in_btsx_weighted[asset]) < -myCurrentFeed[asset]*config["max_negative_diff"] or\
+       (myCurrentFeed[asset]-price_in_btsx_weighted[asset]) >  myCurrentFeed[asset]*config["max_positive_diff"]:     # price of asset in btsx has fallen/risen
+        print("New Feed differs for %s : Old:%.10f ; New:%.10f ; Diff:%.10f ; Max allowed Diff:%.10f +%.10f ; Force updating!"\
+               % (asset, myCurrentFeed[asset],price_in_btsx_weighted[asset],myCurrentFeed[asset]-price_in_btsx_weighted[asset],-myCurrentFeed[asset]*config["max_negative_diff"],\
+                  myCurrentFeed[asset]*config["max_positive_diff"]))
+        shouldPublish = True
+
  ## default: False
- return False
+ return shouldPublish
 
 ## ----------------------------------------------------------------------------
 ## Fetch data
@@ -63,11 +75,15 @@ def fetch_from_btc38():
    response = requests.get(url=url, params=params, headers=headers)
    result = response.json()
   except: 
-   sys.exit("unknown error - btc38")
+   print("Error fetching results from btc38!")
+   if config["btc38_trust_level"] > 0.8:
+    sys.exit("Exiting due to exchange importance!")
+   return
+
   for coin in availableAssets :
-   if "ticker" in result[coin.lower()] and result[coin.lower()]["ticker"]:
+   if "ticker" in result[coin.lower()] and result[coin.lower()]["ticker"] and float(result[coin.lower()]["ticker"]["last"])>config["minValidAssetPrice"]:
     price_in_btc[ coin ].append(float(result[coin.lower()]["ticker"]["last"]))
-    volume_in_btc[ coin ].append(float(result[coin.lower()]["ticker"]["vol"]*result[coin.lower()]["ticker"]["last"]))
+    volume_in_btc[ coin ].append(float(result[coin.lower()]["ticker"]["vol"]*result[coin.lower()]["ticker"]["last"])*config["btc38_trust_level"])
 
   availableAssets = [ "LTC", "BTSX", "BTC", "PPC", "PTS" ]
   try :
@@ -75,11 +91,15 @@ def fetch_from_btc38():
    response = requests.get(url=url, params=params, headers=headers)
    result = response.json()
   except: 
-   sys.exit("unkown error - btc38")
+   print("Error fetching results from btc38!")
+   if config["btc38_trust_level"] > 0.8:
+    sys.exit("Exiting due to exchange importance!")
+   return
+
   for coin in availableAssets :
-   if "ticker" in result[coin.lower()] and result[coin.lower()]["ticker"]:
+   if "ticker" in result[coin.lower()] and result[coin.lower()]["ticker"]  and float(result[coin.lower()]["ticker"]["last"])>config["minValidAssetPrice"]:
     price_in_cny[ coin ].append(float(result[coin.lower()]["ticker"]["last"]))
-    volume_in_cny[ coin ].append(float(result[coin.lower()]["ticker"]["vol"])*float(result[coin.lower()]["ticker"]["last"]))
+    volume_in_cny[ coin ].append(float(result[coin.lower()]["ticker"]["vol"])*float(result[coin.lower()]["ticker"]["last"])*config["btc38_trust_level"])
 
 def fetch_from_bter():
   try :
@@ -87,22 +107,35 @@ def fetch_from_bter():
    response = requests.get(url=url, headers=headers)
    result = response.json()
 
-   availableAssets = [ "LTC", "BTSX", "PTS", "PPC" ]
-   for coin in availableAssets :
-    price_in_btc[ coin ].append(float(result[coin.lower()+"_btc"]["last"]))
-    volume_in_btc[ coin ].append(float(result[coin.lower()+"_btc"]["vol_btc"]))
+  except:
+   print("Error fetching results from bter!")
+   if config["bter_trust_level"] > 0.8:
+    sys.exit("Exiting due to exchange importance")
+   return
 
-   availableAssets = [ "BTC",  "LTC", "BTSX" ]
-   for coin in availableAssets :
-    price_in_usd[ coin ].append(float(result[coin.lower()+"_usd"]["last"]))
-    volume_in_usd[ coin ].append(float(result[coin.lower()+"_usd"]["vol_usd"]))
+  availableAssets = [ "LTC", "BTSX", "PTS", "PPC" ]
+  for coin in availableAssets :
+   if float(result[coin.lower()+"_btc"]["last"]) < config["minValidAssetPrice"]:
+    print("Unreliable results from bter for %s"%(coin))
+    continue
+   price_in_btc[ coin ].append(float(result[coin.lower()+"_btc"]["last"]))
+   volume_in_btc[ coin ].append(float(result[coin.lower()+"_btc"]["vol_btc"])*config["bter_trust_level"])
 
-   availableAssets = [ "BTSX", "BTC", "LTC", "BTSX", "PTS", "PPC" ]
-   for coin in availableAssets :
-    price_in_cny[ coin ].append(float(result[coin.lower()+"_cny"]["last"]))
-    volume_in_cny[ coin ].append(float(result[coin.lower()+"_cny"]["vol_cny"]))
-  except: 
-    sys.exit("Warning: unknown error - BTer")
+  availableAssets = [ "BTC",  "LTC", "BTSX" ]
+  for coin in availableAssets :
+   if float(result[coin.lower()+"_usd"]["last"]) < config["minValidAssetPrice"]:
+    print("Unreliable results from bter for %s"%(coin))
+    continue
+   price_in_usd[ coin ].append(float(result[coin.lower()+"_usd"]["last"]))
+   volume_in_usd[ coin ].append(float(result[coin.lower()+"_usd"]["vol_usd"])*config["bter_trust_level"])
+
+  availableAssets = [ "BTSX", "BTC", "LTC", "BTSX", "PTS", "PPC" ]
+  for coin in availableAssets :
+   if float(result[coin.lower()+"_cny"]["last"]) < config["minValidAssetPrice"]:
+    print("Unreliable results from bter for %s"%(coin))
+    continue
+   price_in_cny[ coin ].append(float(result[coin.lower()+"_cny"]["last"]))
+   volume_in_cny[ coin ].append(float(result[coin.lower()+"_cny"]["vol_cny"])*config["btc38_trust_level"])
 
 def fetch_from_poloniex():
   try:
@@ -110,11 +143,18 @@ def fetch_from_poloniex():
    response = requests.get(url=url, headers=headers)
    result = response.json()
    availableAssets = [ "LTC", "BTSX", "PTS", "PPC" ]
+  except:
+   print("Error fetching results from poloniex!")
+   if config["poloniex_trust_level"] > 0.8:
+    sys.exit("Exiting due to exchange importance!")
+   return
+
+
    for coin in availableAssets :
-    price_in_btc[ coin ].append(float(result["BTC_"+coin.upper()]["last"]))
-    volume_in_btc[ coin ].append(float(result["BTC_"+coin.upper()]["baseVolume"]))
-  except: 
-   sys.exit("Warning: unknown error - poloniex")
+    if float(result["BTC_"+coin.upper()]["last"])>config["minValidAssetPrice"]:
+     price_in_btc[ coin ].append(float(result["BTC_"+coin.upper()]["last"]))
+     volume_in_btc[ coin ].append(float(result["BTC_"+coin.upper()]["baseVolume"])*config["poloniex_trust_level"])
+
 
 def fetch_from_bitrex():
   availableAssets = [ "BTSX", "LTC", "BTSX", "PTS", "PPC" ]
@@ -122,14 +162,19 @@ def fetch_from_bitrex():
    url="https://bittrex.com/api/v1.1/public/getmarketsummaries"
    response = requests.get(url=url, headers=headers)
    result = response.json()["result"]
+  except:
+   print("Error fetching results from bitrex!")
+   if config["bitrex_trust_level"] > 0.8:
+    sys.exit("Exiting due to exchange importance!")
+   return
+
    for coin in result :
     if( coin[ "MarketName" ] in ["BTC-"+a for a in availableAssets] ) :
      mObj    = re.match( 'BTC-(.*)', coin[ "MarketName" ] )
      altcoin = mObj.group(1)
-     price_in_btc[ altcoin ].append(float(coin["Last"]))
-     volume_in_btc[ altcoin ].append(float(coin["Volume"])*float(coin["Last"]))
-  except:
-    sys.exit("Warning: unknown error - bittrex")
+     if float(coin["Last"]) > config["minValidAssetPrice"]:
+      price_in_btc[ altcoin ].append(float(coin["Last"]))
+      volume_in_btc[ altcoin ].append(float(coin["Volume"])*float(coin["Last"])*config["bitrex_trust_level"])
 
 def fetch_from_yahoo():
   try :
@@ -207,6 +252,7 @@ def fetch_from_wallet():
    if feed["delegate_name"] == "MARKET":
     price_median_blockchain[asset] = float(feed["median_price"])
   time.sleep(.5) # Give time for the wallet to do more important tasks!
+
  ## feed from delegates
  for delegate in delegate_list:
   request = {
@@ -218,6 +264,7 @@ def fetch_from_wallet():
   for f in result[ "result" ] :
    myCurrentFeed[ f[ "asset_symbol" ] ] = f[ "price" ]
    oldtime[ f[ "asset_symbol" ] ] = datetime.strptime(f["last_update"],"%Y%m%dT%H%M%S")
+  time.sleep(.5) # Give time for the wallet to do more important tasks!
 
 ## ----------------------------------------------------------------------------
 ## Send the new feeds!
@@ -258,28 +305,28 @@ def get_btsxprice():
   volume_in_btsx[asset] = []
  ## BTC
  for asset in asset_list_publish :
-  for i in price_in_btc[ asset ] :
+  for priceBTC in price_in_btc[ asset ] :
    for idx in range(0, len(price_in_btc["BTSX"])) : # Price
-    price_in_btsx[asset].append( float("%.8g" % float(price_in_btc["BTSX"][idx]/i)))
-    volume_in_btsx[asset].append(float("%.8g" % float(volume_in_btc["BTSX"][idx]/i)))
+    price_in_btsx[asset].append( float("%.8g" % float(price_in_btc["BTSX"][idx]/priceBTC)))
+    volume_in_btsx[asset].append(float("%.8g" % float(volume_in_btc["BTSX"][idx]/priceBTC)))
  ## CNY
  for asset in asset_list_publish :
-  for i in price_in_cny[ asset ] :
+  for priceCNY in price_in_cny[ asset ] :
    for idx in range(0, len(price_in_cny["BTSX"])) : # Price
-    price_in_btsx[asset].append( float("%.8g" % float(price_in_cny["BTSX"][idx]/i)))
-    volume_in_btsx[asset].append(float("%.8g" % float(volume_in_cny["BTSX"][idx]/i)))
+    price_in_btsx[asset].append( float("%.8g" % float(price_in_cny["BTSX"][idx]/priceCNY)))
+    volume_in_btsx[asset].append(float("%.8g" % float(volume_in_cny["BTSX"][idx]/priceCNY)))
  ## USD
  for asset in asset_list_publish :
-  for i in price_in_usd[ asset ] :
+  for priceUSD in price_in_usd[ asset ] :
    for idx in range(0, len(price_in_usd["BTSX"])) : # Price
-    price_in_btsx[asset].append( float("%.8g" % float(price_in_usd["BTSX"][idx]/i)))
-    volume_in_btsx[asset].append(float("%.8g" % float(volume_in_usd["BTSX"][idx]/i)))
+    price_in_btsx[asset].append( float("%.8g" % float(price_in_usd["BTSX"][idx]/priceUSD)))
+    volume_in_btsx[asset].append(float("%.8g" % float(volume_in_usd["BTSX"][idx]/priceUSD)))
  ## EUR
  for asset in asset_list_publish :
-  for i in price_in_eur[ asset ] :
+  for priceEUR in price_in_eur[ asset ] :
    for idx in range(0, len(price_in_eur["BTSX"])) : # Price
-    price_in_btsx[asset].append( float("%.8g" % float(price_in_eur["BTSX"][idx]/i)))
-    volume_in_btsx[asset].append(float("%.8g" % float(volume_in_eur["BTSX"][idx]/i)))
+    price_in_btsx[asset].append( float("%.8g" % float(price_in_eur["BTSX"][idx]/priceEUR)))
+    volume_in_btsx[asset].append(float("%.8g" % float(volume_in_eur["BTSX"][idx]/priceEUR)))
  
  for asset in asset_list_publish :
   ### Median
@@ -289,23 +336,23 @@ def get_btsxprice():
   ### Weighted Mean
   volume     = [b for b in  volume_in_btsx[asset] ]
   assetprice = [a for a in  price_in_btsx[asset]  ]
-  price_in_btsx_average[asset] = num.average(assetprice, weights=volume)
+  price_in_btsx_weighted[asset] = num.average(assetprice, weights=volume)
 
   ### Discount
-  price_in_btsx_average[asset] = price_in_btsx_average[asset] / config["discount"]
+  price_in_btsx_weighted[asset] = price_in_btsx_weighted[asset] / config["discount"]
 
 
 def print_stats() :
  print( "="*220)
  for asset in asset_list_publish :
-    p = price_in_btsx_average[asset]
+    p = price_in_btsx_weighted[asset]
     ps = price_in_btsx[asset]
     bc = price_median_blockchain[asset]
-    print("{0}|new: {1:>7.5f}BTSX (e:{2:>7.5f}/{3:>7.5f}) (bc:{4:>7.5f})  ".format(asset, p, statistics.mean(ps), statistics.median(ps), bc)+\
-          "|  change: {0:+5.2f}%  ".format((p - myCurrentFeed[asset])*100)+\
-          "|  change (to med.): {0:+7.2f}%  ".format((p - bc)*100)+\
-          "|  exchange (median): {0:+5.2f}%  ".format((statistics.median(ps)-p)/p*100)+\
-          "|  exchange (range): {0:+5.2f}% to {1:+7.2f}%  ".format((num.min(ps)-p)/p*100,(num.max(ps)-p)/p*100 )+\
+    print("{0}|new: {1:>7.7f}BTSX (e:{2:>7.7f}/{3:>7.7f}) (bc:{4:>7.7f})  ".format(asset, p, statistics.mean(ps), statistics.median(ps), bc)+\
+          "|  change: {0:+5.4f}%  ".format((p - myCurrentFeed[asset])*100)+\
+          "|  change (to med.): {0:+7.4f}%  ".format((p - bc)*100)+\
+          "|  exchange (median): {0:+7.4f}%  ".format((statistics.median(ps)-p)/p*100)+\
+          "|  exchange (range): {0:+7.4f}% to {1:+7.4f}%  ".format((num.min(ps)-p)/p*100,(num.max(ps)-p)/p*100 )+\
           "|  last update: {0!s} ago".format(str(datetime.utcnow()-oldtime[asset]))  )
 
 ## ----------------------------------------------------------------------------
@@ -344,11 +391,11 @@ if __name__ == "__main__":
  price_in_btc            = {}
  price_in_eur            = {}
  price_in_btsx           = {}
- price_in_btsx_average   = {}
+ price_in_btsx_weighted  = {}
  volume                  = {}
  myCurrentFeed           = {}
  price_median_blockchain = {}
- realPrice               = {}
+ medianRealPrice         = {}
  assetprecision          = {}
  assetprecision["BTSX"]  = 1e5
  oldtime                 = {}
@@ -364,10 +411,10 @@ if __name__ == "__main__":
   volume_in_btc[ asset ]         = []
   volume_in_cny[ asset ]         = []
   volume_in_btsx[ asset ]        = []
-  price_in_btsx_average[asset]   = 0.0
+  price_in_btsx_weighted[asset]  = 0.0
   myCurrentFeed[asset]           = 0.0
   price_median_blockchain[asset] = 0.0
-  realPrice[asset]               = 0.0
+  medianRealPrice[asset]         = 0.0
   oldtime[asset]                 = datetime.utcnow()
 
  ## Get prices and stats ######################################################
@@ -392,8 +439,8 @@ if __name__ == "__main__":
  asset_list_final = []
  for asset in asset_list_publish :
   if len(price_in_btsx[asset]) > 0 :
-   if price_in_btsx_average[asset] > 0.0:
-    asset_list_final.append([ asset, price_in_btsx_average[asset] ])
+   if price_in_btsx_weighted[asset] > 0.0:
+    asset_list_final.append([ asset, price_in_btsx_weighted[asset] ])
 
  ## Print some stats ##########################################################
  print_stats()
