@@ -339,7 +339,7 @@ def get_btsxprice():
   price_in_btsx_weighted[asset] = num.average(assetprice, weights=volume)
 
   ### Discount
-  price_in_btsx_weighted[asset] = price_in_btsx_weighted[asset] / config["discount"]
+  price_in_btsx_weighted[asset] = price_in_btsx_weighted[asset] * config["discount"]
 
 
 def print_stats() :

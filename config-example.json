@@ -9,7 +9,7 @@
   "payaccount" : "",
   "maxAgeFeedInSeconds" : 60000,
   "minFeedAgeInSeconds" : 120,
-  "discount" : 0.995,
+  "discount" : 0.990,
   "minValidAssetPrice" : 0.00001,
   "max_positive_diff" : 0.01,
   "max_negative_diff" : 0.002,
