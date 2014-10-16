@@ -73,7 +73,7 @@ def fetch_from_btc38():
   try :
    params = { 'c': 'all', 'mk_type': 'btc' }
    response = requests.get(url=url, params=params, headers=headers)
-   result = response.json()
+   result = json.loads(vars(response)['_content'].decode("utf-8-sig"))
   except: 
    print("Error fetching results from btc38!")
    if config["btc38_trust_level"] > 0.8:
@@ -89,7 +89,7 @@ def fetch_from_btc38():
   try :
    params = { 'c': 'all', 'mk_type': 'cny' }
    response = requests.get(url=url, params=params, headers=headers)
-   result = response.json()
+   result = json.loads(vars(response)['_content'].decode("utf-8-sig"))
   except: 
    print("Error fetching results from btc38!")
    if config["btc38_trust_level"] > 0.8:
