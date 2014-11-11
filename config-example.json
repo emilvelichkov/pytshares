@@ -4,7 +4,7 @@
     "username": "user",
     "password": "secret"
   },
-  "asset_list_display": ["CNY", "USD", "BTC", "GLD"],
+  "asset_list_display": ["CNY", "USD", "BTC"],
   "delegate_list": [ "emski"],
   "payaccount" : "",
   "maxAgeFeedInSeconds" : 60000,

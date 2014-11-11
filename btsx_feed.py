@@ -148,33 +148,29 @@ def fetch_from_poloniex():
    if config["poloniex_trust_level"] > 0.8:
     sys.exit("Exiting due to exchange importance!")
    return
+  for coin in availableAssets :
+   if float(result["BTC_"+coin.upper()]["last"])>config["minValidAssetPrice"]:
+    price_in_btc[ coin ].append(float(result["BTC_"+coin.upper()]["last"]))
+    volume_in_btc[ coin ].append(float(result["BTC_"+coin.upper()]["baseVolume"])*config["poloniex_trust_level"])
 
-
-   for coin in availableAssets :
-    if float(result["BTC_"+coin.upper()]["last"])>config["minValidAssetPrice"]:
-     price_in_btc[ coin ].append(float(result["BTC_"+coin.upper()]["last"]))
-     volume_in_btc[ coin ].append(float(result["BTC_"+coin.upper()]["baseVolume"])*config["poloniex_trust_level"])
-
-
-def fetch_from_bitrex():
+def fetch_from_bittrex():
   availableAssets = [ "BTSX", "LTC", "BTSX", "PTS", "PPC" ]
   try:
    url="https://bittrex.com/api/v1.1/public/getmarketsummaries"
    response = requests.get(url=url, headers=headers)
    result = response.json()["result"]
   except:
-   print("Error fetching results from bitrex!")
-   if config["bitrex_trust_level"] > 0.8:
+   print("Error fetching results from bittrex!")
+   if config["bittrex_trust_level"] > 0.8:
     sys.exit("Exiting due to exchange importance!")
    return
-
-   for coin in result :
-    if( coin[ "MarketName" ] in ["BTC-"+a for a in availableAssets] ) :
-     mObj    = re.match( 'BTC-(.*)', coin[ "MarketName" ] )
-     altcoin = mObj.group(1)
-     if float(coin["Last"]) > config["minValidAssetPrice"]:
-      price_in_btc[ altcoin ].append(float(coin["Last"]))
-      volume_in_btc[ altcoin ].append(float(coin["Volume"])*float(coin["Last"])*config["bitrex_trust_level"])
+  for coin in result :
+   if( coin[ "MarketName" ] in ["BTC-"+a for a in availableAssets] ) :
+    mObj    = re.match( 'BTC-(.*)', coin[ "MarketName" ] )
+    altcoin = mObj.group(1)
+    if float(coin["Last"]) > config["minValidAssetPrice"]:
+     price_in_btc[ altcoin ].append(float(coin["Last"]))
+     volume_in_btc[ altcoin ].append(float(coin["Volume"])*float(coin["Last"])*config["bittrex_trust_level"])
 
 def fetch_from_yahoo():
   try :
@@ -207,13 +203,13 @@ def fetch_from_yahoo():
    sys.exit("Warning: unknown error - yahoo")
 
 ## ----------------------------------------------------------------------------
-## GLD=XAU  SLV=XAG
+## GOLD=XAU  SILVER=XAG
 ## ----------------------------------------------------------------------------
 def bitassetname(asset) :
  if asset == "XAU" : 
-  return "GLD"
+  return "GOLD"
  elif asset == "XAG" : 
-  return "SLV"
+  return "SILVER"
  else :
   return asset
 
@@ -368,7 +364,7 @@ if __name__ == "__main__":
             'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
  auth    = (config["bts_rpc"]["username"], config["bts_rpc"]["password"])
  url     = config["bts_rpc"]["url"]
- asset_list_all = ["PTS", "PPC", "LTC", "BTC", "SLV", "GLD", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD"] #  "WTI" missing as incompatible
+ asset_list_all = ["PTS", "PPC", "LTC", "BTC", "SILVER", "GOLD", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD"] #  "WTI" missing as incompatible
  delegate_list  = config["delegate_list"]
  ## Call Parameters ###########################################################
  if len( sys.argv ) < 2 :
@@ -429,7 +425,7 @@ if __name__ == "__main__":
  print(", Poloniex", end="",flush=True)
  fetch_from_poloniex()
  print(", bittrex", end="",flush=True)
- fetch_from_bitrex()
+ fetch_from_bittrex()
  print(" -- done. Calculating btsx feeds prices and checking publish rules.")
 
  ## Determine btsx price ######################################################
