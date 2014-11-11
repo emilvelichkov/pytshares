@@ -4,17 +4,17 @@
     "username": "user",
     "password": "secret"
   },
-  "asset_list_display": ["CNY", "USD", "BTC"],
+  "asset_list_display": ["CNY", "USD", "BTC", "EUR"],
   "delegate_list": [ "emski"],
   "payaccount" : "",
   "maxAgeFeedInSeconds" : 60000,
   "minFeedAgeInSeconds" : 120,
-  "discount" : 0.990,
+  "discount" : 0.997,
   "minValidAssetPrice" : 0.00001,
   "max_positive_diff" : 0.01,
   "max_negative_diff" : 0.002,
-  "btc38_trust_level" : 1.0,
-  "bter_trust_level" : 1.0,
-  "poloniex_trust_level" : 0.5,
-  "bittrex_trust_level" : 0.5
+  "btc38_trust_level" : 0.7,
+  "bter_trust_level" : 0.7,
+  "poloniex_trust_level" : 0.35,
+  "bittrex_trust_level" : 0.35
 }
