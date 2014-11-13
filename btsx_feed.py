@@ -113,29 +113,42 @@ def fetch_from_bter():
     sys.exit("Exiting due to exchange importance")
    return
 
-  availableAssets = [ "LTC", "BTSX", "PTS", "PPC" ]
+  availableAssets = [ "LTC", "BTS", "PTS", "PPC" ]
   for coin in availableAssets :
    if float(result[coin.lower()+"_btc"]["last"]) < config["minValidAssetPrice"]:
     print("Unreliable results from bter for %s"%(coin))
     continue
-   price_in_btc[ coin ].append(float(result[coin.lower()+"_btc"]["last"]))
-   volume_in_btc[ coin ].append(float(result[coin.lower()+"_btc"]["vol_btc"])*config["bter_trust_level"])
+   mapAsset = coin
+   if mapAsset == "BTS" :
+    mapAsset = "BTSX"
+   price_in_btc[ mapAsset ].append(float(result[coin.lower()+"_btc"]["last"]))
+   volume_in_btc[ mapAsset ].append(float(result[coin.lower()+"_btc"]["vol_btc"])*confi$
 
-  availableAssets = [ "BTC",  "LTC", "BTSX" ]
+  availableAssets = [ "BTC",  "LTC", "BTS" ]
   for coin in availableAssets :
    if float(result[coin.lower()+"_usd"]["last"]) < config["minValidAssetPrice"]:
     print("Unreliable results from bter for %s"%(coin))
     continue
-   price_in_usd[ coin ].append(float(result[coin.lower()+"_usd"]["last"]))
-   volume_in_usd[ coin ].append(float(result[coin.lower()+"_usd"]["vol_usd"])*config["bter_trust_level"])
 
-  availableAssets = [ "BTSX", "BTC", "LTC", "BTSX", "PTS", "PPC" ]
+   mapAsset = coin
+   if mapAsset == "BTS" :
+    mapAsset = "BTSX"
+
+   price_in_usd[ mapAsset ].append(float(result[coin.lower()+"_usd"]["last"]))
+   volume_in_usd[ mapAsset ].append(float(result[coin.lower()+"_usd"]["vol_usd"])*confi$
+
+  availableAssets = [ "BTC", "LTC", "BTS", "PTS", "PPC" ]
   for coin in availableAssets :
    if float(result[coin.lower()+"_cny"]["last"]) < config["minValidAssetPrice"]:
     print("Unreliable results from bter for %s"%(coin))
     continue
-   price_in_cny[ coin ].append(float(result[coin.lower()+"_cny"]["last"]))
-   volume_in_cny[ coin ].append(float(result[coin.lower()+"_cny"]["vol_cny"])*config["btc38_trust_level"])
+
+   mapAsset = coin
+   if mapAsset == "BTS" :
+    mapAsset = "BTSX"
+
+   price_in_cny[ mapAsset ].append(float(result[coin.lower()+"_cny"]["last"]))
+   volume_in_cny[ mapAsset ].append(float(result[coin.lower()+"_cny"]["vol_cny"])*confi$
 
 def fetch_from_poloniex():
   try:
