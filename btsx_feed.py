@@ -135,7 +135,7 @@ def fetch_from_bter():
     mapAsset = "BTSX"
 
    price_in_usd[ mapAsset ].append(float(result[coin.lower()+"_usd"]["last"]))
-   volume_in_usd[ mapAsset ].append(float(result[coin.lower()+"_usd"]["vol_usd"])*confi$
+   volume_in_usd[ mapAsset ].append(float(result[coin.lower()+"_usd"]["vol_usd"])*config["bter_trust_level"])
 
   availableAssets = [ "BTC", "LTC", "BTS", "PTS", "PPC" ]
   for coin in availableAssets :
@@ -148,7 +148,7 @@ def fetch_from_bter():
     mapAsset = "BTSX"
 
    price_in_cny[ mapAsset ].append(float(result[coin.lower()+"_cny"]["last"]))
-   volume_in_cny[ mapAsset ].append(float(result[coin.lower()+"_cny"]["vol_cny"])*confi$
+   volume_in_cny[ mapAsset ].append(float(result[coin.lower()+"_cny"]["vol_cny"])*config["btc38_trust_level"])
 
 def fetch_from_poloniex():
   try:
