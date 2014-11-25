@@ -69,7 +69,7 @@ def publish_rule():
 ## ----------------------------------------------------------------------------
 def fetch_from_btc38():
   url="http://api.btc38.com/v1/ticker.php"
-  availableAssets = [ "LTC", "BTS", "PTS" ]
+  availableAssets = [ "LTC", "BTSX", "PTS" ]
   try :
    params = { 'c': 'all', 'mk_type': 'btc' }
    response = requests.get(url=url, params=params, headers=headers)
@@ -81,14 +81,11 @@ def fetch_from_btc38():
    return
 
   for coin in availableAssets :
-   mapAsset = coin
-   if mapAsset == "BTS" :
-    mapAsset = "BTSX"
    if "ticker" in result[coin.lower()] and result[coin.lower()]["ticker"] and float(result[coin.lower()]["ticker"]["last"])>config["minValidAssetPrice"]:
-    price_in_btc[ mapAsset ].append(float(result[coin.lower()]["ticker"]["last"]))
-    volume_in_btc[ mapAsset ].append(float(result[coin.lower()]["ticker"]["vol"]*result[coin.lower()]["ticker"]["last"])*config["btc38_trust_level"])
+    price_in_btc[ coin ].append(float(result[coin.lower()]["ticker"]["last"]))
+    volume_in_btc[ coin ].append(float(result[coin.lower()]["ticker"]["vol"]*result[coin.lower()]["ticker"]["last"])*config["btc38_trust_level"])
 
-  availableAssets = [ "LTC", "BTS", "BTC", "PPC", "PTS" ]
+  availableAssets = [ "LTC", "BTSX", "BTC", "PPC", "PTS" ]
   try :
    params = { 'c': 'all', 'mk_type': 'cny' }
    response = requests.get(url=url, params=params, headers=headers)
@@ -100,12 +97,9 @@ def fetch_from_btc38():
    return
 
   for coin in availableAssets :
-   mapAsset = coin
-   if mapAsset == "BTS" :
-    mapAsset = "BTSX"
    if "ticker" in result[coin.lower()] and result[coin.lower()]["ticker"]  and float(result[coin.lower()]["ticker"]["last"])>config["minValidAssetPrice"]:
-    price_in_cny[ mapAsset ].append(float(result[coin.lower()]["ticker"]["last"]))
-    volume_in_cny[ mapAsset ].append(float(result[coin.lower()]["ticker"]["vol"])*float(result[coin.lower()]["ticker"]["last"])*config["btc38_trust_level"])
+    price_in_cny[ coin ].append(float(result[coin.lower()]["ticker"]["last"]))
+    volume_in_cny[ coin ].append(float(result[coin.lower()]["ticker"]["vol"])*float(result[coin.lower()]["ticker"]["last"])*config["btc38_trust_level"])
 
 def fetch_from_bter():
   try :
