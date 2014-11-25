@@ -80,7 +80,7 @@ def fetch_from_btc38():
     sys.exit("Exiting due to exchange importance!")
    return
    
-  try
+  try :
    for coin in availableAssets :
     if "ticker" in result[coin.lower()] and result[coin.lower()]["ticker"] and float(result[coin.lower()]["ticker"]["last"])>config["minValidAssetPrice"]:
      price_in_btc[ coin ].append(float(result[coin.lower()]["ticker"]["last"]))
@@ -102,7 +102,7 @@ def fetch_from_btc38():
     sys.exit("Exiting due to exchange importance!")
    return
    
-  try
+  try :
    for coin in availableAssets :
     if "ticker" in result[coin.lower()] and result[coin.lower()]["ticker"]  and float(result[coin.lower()]["ticker"]["last"])>config["minValidAssetPrice"]:
      price_in_cny[ coin ].append(float(result[coin.lower()]["ticker"]["last"]))
