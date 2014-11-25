@@ -79,12 +79,18 @@ def fetch_from_btc38():
    if config["btc38_trust_level"] > 0.8:
     sys.exit("Exiting due to exchange importance!")
    return
-
-  for coin in availableAssets :
-   if "ticker" in result[coin.lower()] and result[coin.lower()]["ticker"] and float(result[coin.lower()]["ticker"]["last"])>config["minValidAssetPrice"]:
-    price_in_btc[ coin ].append(float(result[coin.lower()]["ticker"]["last"]))
-    volume_in_btc[ coin ].append(float(result[coin.lower()]["ticker"]["vol"]*result[coin.lower()]["ticker"]["last"])*config["btc38_trust_level"])
-
+   
+  try
+   for coin in availableAssets :
+    if "ticker" in result[coin.lower()] and result[coin.lower()]["ticker"] and float(result[coin.lower()]["ticker"]["last"])>config["minValidAssetPrice"]:
+     price_in_btc[ coin ].append(float(result[coin.lower()]["ticker"]["last"]))
+     volume_in_btc[ coin ].append(float(result[coin.lower()]["ticker"]["vol"]*result[coin.lower()]["ticker"]["last"])*config["btc38_trust_level"])
+  except: 
+   print("Error fetching results from btc38!")
+   if config["btc38_trust_level"] > 0.8:
+    sys.exit("Exiting due to exchange importance!")
+   return
+   
   availableAssets = [ "LTC", "BTSX", "BTC", "PPC", "PTS" ]
   try :
    params = { 'c': 'all', 'mk_type': 'cny' }
@@ -95,11 +101,17 @@ def fetch_from_btc38():
    if config["btc38_trust_level"] > 0.8:
     sys.exit("Exiting due to exchange importance!")
    return
-
-  for coin in availableAssets :
-   if "ticker" in result[coin.lower()] and result[coin.lower()]["ticker"]  and float(result[coin.lower()]["ticker"]["last"])>config["minValidAssetPrice"]:
-    price_in_cny[ coin ].append(float(result[coin.lower()]["ticker"]["last"]))
-    volume_in_cny[ coin ].append(float(result[coin.lower()]["ticker"]["vol"])*float(result[coin.lower()]["ticker"]["last"])*config["btc38_trust_level"])
+   
+  try
+   for coin in availableAssets :
+    if "ticker" in result[coin.lower()] and result[coin.lower()]["ticker"]  and float(result[coin.lower()]["ticker"]["last"])>config["minValidAssetPrice"]:
+     price_in_cny[ coin ].append(float(result[coin.lower()]["ticker"]["last"]))
+     volume_in_cny[ coin ].append(float(result[coin.lower()]["ticker"]["vol"])*float(result[coin.lower()]["ticker"]["last"])*config["btc38_trust_level"])
+  except: 
+   print("Error fetching results from btc38!")
+   if config["btc38_trust_level"] > 0.8:
+    sys.exit("Exiting due to exchange importance!")
+   return
 
 def fetch_from_bter():
   try :
