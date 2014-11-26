@@ -69,7 +69,7 @@ def publish_rule():
 ## ----------------------------------------------------------------------------
 def fetch_from_btc38():
   url="http://api.btc38.com/v1/ticker.php"
-  availableAssets = [ "LTC", "BTS", "PTS" ]
+  availableAssets = [ "LTC", "BTS" ]
   try :
    params = { 'c': 'all', 'mk_type': 'btc' }
    response = requests.get(url=url, params=params, headers=headers)
@@ -94,7 +94,7 @@ def fetch_from_btc38():
     sys.exit("Exiting due to exchange importance!")
    return
    
-  availableAssets = [ "LTC", "BTS", "BTC", "PPC", "PTS" ]
+  availableAssets = [ "LTC", "BTS", "BTC", "PPC" ]
   try :
    params = { 'c': 'all', 'mk_type': 'cny' }
    response = requests.get(url=url, params=params, headers=headers)
