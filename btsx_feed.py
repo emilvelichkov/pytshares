@@ -290,7 +290,7 @@ def fetch_from_wallet():
   result = response.json()
   for f in result[ "result" ] :
    myCurrentFeed[ f[ "asset_symbol" ] ] = f[ "price" ]
-   oldtime[ f[ "asset_symbol" ] ] = datetime.strptime(f["last_update"],"%Y%m%dT%H%M%S")
+   oldtime[ f[ "asset_symbol" ] ] = datetime.strptime(f["last_update"],"%Y-%m-%dT%H:%M:%S")
   time.sleep(.5) # Give time for the wallet to do more important tasks!
 
 ## ----------------------------------------------------------------------------
