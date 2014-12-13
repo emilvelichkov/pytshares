@@ -205,7 +205,7 @@ def fetch_from_bittrex():
 
 def fetch_from_yahoo():
   try :
-   availableAssets = ["XAG", "XAU", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD"]
+   availableAssets = ["KRW", "XAG", "XAU", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD"]
    ## USD/X
    yahooAssets = ",".join(["USD"+a+"=X" for a in availableAssets])
    url="http://download.finance.yahoo.com/d/quotes.csv"
@@ -395,7 +395,7 @@ if __name__ == "__main__":
             'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
  auth    = (config["bts_rpc"]["username"], config["bts_rpc"]["password"])
  url     = config["bts_rpc"]["url"]
- asset_list_all = ["PTS", "PPC", "LTC", "BTC", "SILVER", "GOLD", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD"] #  "WTI" missing as incompatible
+ asset_list_all = ["PTS", "PPC", "LTC", "BTC", "KRW", "SILVER", "GOLD", "TRY", "SGD", "HKD", "RUB", "SEK", "NZD", "CNY", "MXN", "CAD", "CHF", "AUD", "GBP", "JPY", "EUR", "USD"] #  "WTI" missing as incompatible
  delegate_list  = config["delegate_list"]
  ## Call Parameters ###########################################################
  if len( sys.argv ) < 2 :
