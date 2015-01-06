@@ -173,7 +173,7 @@ def fetch_from_poloniex():
    url="https://poloniex.com/public?command=returnTicker"
    response = requests.get(url=url, headers=headers)
    result = response.json()
-   availableAssets = [ "LTC", "BTSX", "PTS", "PPC" ]
+   availableAssets = [ "LTC", "BTS", "PTS", "PPC" ]
   except:
    print("Error fetching results from poloniex!")
    if config["poloniex_trust_level"] > 0.8:
