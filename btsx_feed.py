@@ -180,9 +180,12 @@ def fetch_from_poloniex():
     sys.exit("Exiting due to exchange importance!")
    return
   for coin in availableAssets :
+   mapAsset = coin
+   if mapAsset == "BTS" :
+    mapAsset = "BTSX"
    if float(result["BTC_"+coin.upper()]["last"])>config["minValidAssetPrice"]:
-    price_in_btc[ coin ].append(float(result["BTC_"+coin.upper()]["last"]))
-    volume_in_btc[ coin ].append(float(result["BTC_"+coin.upper()]["baseVolume"])*config["poloniex_trust_level"])
+    price_in_btc[ mapAsset ].append(float(result["BTC_"+coin.upper()]["last"]))
+    volume_in_btc[ mapAsset ].append(float(result["BTC_"+coin.upper()]["baseVolume"])*config["poloniex_trust_level"])
 
 def fetch_from_bittrex():
   availableAssets = [ "BTSX", "LTC", "BTSX", "PTS", "PPC" ]
