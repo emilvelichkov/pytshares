@@ -214,7 +214,7 @@ def fetch_from_yahoo():
    url="http://download.finance.yahoo.com/d/quotes.csv"
    params = {'s':yahooAssets,'f':'l1','e':'.csv'}
    response = requests.get(url=url, headers=headers,params=params)
-   yahooprices =  response.text.split( '\r\n' )
+   yahooprices =  response.text.replace('\r','').split( '\n' )
    for i,a in enumerate(availableAssets,1) :
     price_in_usd[ bitassetname(a.upper()) ].append(1/float(yahooprices[i-1])) # flipped market
    ## CNY/X
@@ -222,7 +222,7 @@ def fetch_from_yahoo():
    url="http://download.finance.yahoo.com/d/quotes.csv"
    params = {'s':yahooAssets,'f':'l1','e':'.csv'}
    response = requests.get(url=url, headers=headers,params=params)
-   yahooprices =  response.text.split( '\r\n' )
+   yahooprices =  response.text.replace('\r','').split( '\n' )
    for i,a in enumerate(availableAssets,1) :
     price_in_cny[ bitassetname(a.upper()) ].append(float(yahooprices[i-1])) ## market is the other way round! (yahooAssets)
    ## EUR/X
@@ -230,7 +230,7 @@ def fetch_from_yahoo():
    url="http://download.finance.yahoo.com/d/quotes.csv"
    params = {'s':yahooAssets,'f':'l1','e':'.csv'}
    response = requests.get(url=url, headers=headers,params=params)
-   yahooprices =  response.text.split( '\r\n' )
+   yahooprices =  response.text.replace('\r','').split( '\n' )
    for i,a in enumerate(availableAssets,1) :
     price_in_eur[ bitassetname(a.upper()) ].append(float(yahooprices[i-1]))
   except:
