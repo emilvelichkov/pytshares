@@ -292,7 +292,7 @@ def fetch_from_wallet():
   response = requests.post(url, data=json.dumps(request), headers=headers, auth=auth)
   result = response.json()
   for f in result[ "result" ] :
-   myCurrentFeed[ f[ "asset_symbol" ] ] = f[ "price" ]
+   myCurrentFeed[ f[ "asset_symbol" ] ] = float(f[ "price" ])
    oldtime[ f[ "asset_symbol" ] ] = datetime.strptime(f["last_update"],"%Y-%m-%dT%H:%M:%S")
   time.sleep(.5) # Give time for the wallet to do more important tasks!
 
@@ -379,7 +379,7 @@ def print_stats() :
     ps = price_in_btsx[asset]
     bc = price_median_blockchain[asset]
     print("{0}|new: {1:>7.7f}BTSX (e:{2:>7.7f}/{3:>7.7f}) (bc:{4:>7.7f})  ".format(asset, p, statistics.mean(ps), statistics.median(ps), bc)+\
-          "|  change: {0:+5.4f}%  ".format((p - myCurrentFeed[asset])*100)+\
+          "|  change: {0:+5.4f}%  ".format((p - float(myCurrentFeed[asset]))*100)+\
           "|  change (to med.): {0:+7.4f}%  ".format((p - bc)*100)+\
           "|  exchange (median): {0:+7.4f}%  ".format((statistics.median(ps)-p)/p*100)+\
           "|  exchange (range): {0:+7.4f}% to {1:+7.4f}%  ".format((num.min(ps)-p)/p*100,(num.max(ps)-p)/p*100 )+\
@@ -470,7 +470,7 @@ if __name__ == "__main__":
  for asset in asset_list_publish :
   if len(price_in_btsx[asset]) > 0 :
    if price_in_btsx_weighted[asset] > 0.0:
-    asset_list_final.append([ asset, price_in_btsx_weighted[asset] ])
+    asset_list_final.append([ asset, str("%.15f" % price_in_btsx_weighted[asset]) ])
 
  ## Print some stats ##########################################################
  print_stats()
